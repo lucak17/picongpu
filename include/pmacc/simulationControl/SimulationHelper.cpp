@@ -95,6 +95,7 @@ namespace pmacc
     template<unsigned DIM>
     void SimulationHelper<DIM>::dumpOneStep(uint32_t currentStep)
     {
+       // std::cout << "Debug: I am in SimulationHelper<DIM>::dumpOneStep " << currentStep <<  std::endl; 
         /* trigger checkpoint notification */
         if(pluginSystem::containsStep(seqCheckpointPeriod, currentStep))
         {
@@ -132,6 +133,7 @@ namespace pmacc
 
             if(gc.getGlobalRank() == 0)
             {
+                std::cout << "Debug: write checkpoint step " << currentStep <<  std::endl; 
                 writeCheckpointStep(currentStep);
             }
             numCheckpoints++;
@@ -452,9 +454,10 @@ namespace pmacc
     template<unsigned DIM>
     void SimulationHelper<DIM>::writeCheckpointStep(const uint32_t checkpointStep)
     {
+        std::cout << "Debug: I am in SimulationHelper<DIM>::writeCheckpointStep " << checkpointStep <<  std::endl;
         std::ofstream file;
         const std::string checkpointMasterFile = checkpointDirectory + std::string("/") + CHECKPOINT_MASTER_FILE;
-
+        std::cout << "Debug: checkpoint master file " << checkpointMasterFile <<  std::endl;
         file.open(checkpointMasterFile.c_str(), std::ofstream::app);
 
         if(!file)

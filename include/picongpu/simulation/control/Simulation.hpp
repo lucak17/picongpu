@@ -751,10 +751,24 @@ namespace picongpu
             dataConnector.consume(std::move(fieldB));
             auto fieldE = std::make_unique<FieldE>(*cellDescription);
             dataConnector.consume(std::move(fieldE));
+
+            std::cout << "Unit E " << fieldE->getUnit() << std::endl;
+            std::cout << "Unit dimension E1 " << fieldE->getUnitDimension()[0] << std::endl;
+            std::cout << "Vector elements: ";
+            for (size_t i = 0; i < fieldE->getUnitDimension().size(); ++i) {
+                std::cout << fieldE->getUnitDimension()[i] << " ";
+            }
+            std::cout << std::endl;
             auto fieldJ = std::make_unique<FieldJ>(*cellDescription);
             dataConnector.consume(std::move(fieldJ));
-            for(uint32_t slot = 0; slot < fieldTmpNumSlots; ++slot)
-            {
+            auto fieldV = std::make_unique<FieldTmp>(*cellDescription, 0);
+            dataConnector.consume(std::move(fieldV));
+            auto fieldRho = std::make_unique<FieldTmp>(*cellDescription, 1);
+            dataConnector.consume(std::move(fieldRho));
+            
+
+            for(uint32_t slot = 2; slot < fieldTmpNumSlots + 2; ++slot)
+            {   std::cout << "Field tmp "<< slot << std::endl;
                 auto fieldTmp = std::make_unique<FieldTmp>(*cellDescription, slot);
                 dataConnector.consume(std::move(fieldTmp));
             }
