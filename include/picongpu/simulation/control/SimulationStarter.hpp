@@ -134,6 +134,8 @@ namespace picongpu
     protected:
         void pluginLoad() override
         {
+            std::cout<<"Debug in picongpu/include/picongpu/simulation/control/SimulationStarter.hpp/pluginLoad "<<std::endl;
+
             simulationClass->load();
             metadataClass->load();
             addMetadataRegisteredAtCT();
@@ -144,6 +146,8 @@ namespace picongpu
 
         void pluginUnload() override
         {
+            std::cout<<"Debug in picongpu/include/picongpu/simulation/control/SimulationStarter.hpp/pluginUnload "<<std::endl;
+
             PluginConnector& pluginConnector = Environment<>::get().PluginConnector();
             pluginConnector.unloadPlugins();
             initClass->unload();

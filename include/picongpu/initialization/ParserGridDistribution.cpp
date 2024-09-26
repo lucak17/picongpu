@@ -21,6 +21,7 @@
 
 #include <pmacc/verify.hpp>
 
+#include <iostream>
 #include <cstdint>
 #include <iterator> // std::distance
 #include <regex>
@@ -32,6 +33,7 @@ namespace picongpu
 {
     ParserGridDistribution::ParserGridDistribution(std::string const s)
     {
+        std::cout<<"Debug in include/picongpu/initialization/ParserGridDistribution.cpp/ParserGridDistribution string: "<< s << std::endl;
         parsedInput = parse(s);
     }
 

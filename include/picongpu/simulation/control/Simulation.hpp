@@ -183,6 +183,8 @@ namespace picongpu
 
         void pluginLoad() override
         {
+
+            std::cout<<"Debug in include/picongpu/simulation/control/Simulation.hpp/pluginLoad" << std::endl;
             // fill periodic with 0
             while(periodic.size() < 3)
                 periodic.push_back(0);
@@ -247,10 +249,13 @@ namespace picongpu
 
             // calculate the number of local grid cells and
             // the local cell offset to the global box
+            std::cout<<"Debug in include/picongpu/simulation/control/Simulation.hpp/pluginLoad gridDistribution "<< gridDistribution.size() << std::endl;
             for(uint32_t dim = 0; dim < gridDistribution.size() && dim < simDim; ++dim)
             {
+                std::cout<<"Debug in include/picongpu/simulation/control/Simulation.hpp/pluginLoad dim "<< dim << std::endl;
                 // parse string
                 ParserGridDistribution parserGD(gridDistribution.at(dim));
+                std::cout<<"Debug in include/picongpu/simulation/control/Simulation.hpp/pluginLoad dim "<< dim<< " gridDistribution " << gridDistribution.at(dim) << std::endl;
 
                 // verify number of blocks and devices in dimension match
                 parserGD.verifyDevices(gpus[dim]);
@@ -286,7 +291,9 @@ namespace picongpu
             }
             MovingWindow::getInstance().setMovePoint(windowMovePoint);
             MovingWindow::getInstance().setEndSlideOnStep(endSlidingOnStep);
-
+            
+            std::cout<<"Debug in include/picongpu/simulation/control/Simulation.hpp/pluginLoad" << std::endl;
+            std::cout<<"Debug rank "<< myGPUpos.toString() << " Localsize " << gridSizeLocal.toString() << " localoffset " << gridOffset.toString() << "\n" << std::endl;
             log<picLog::DOMAINS>("rank %1%; localsize %2%; localoffset %3%;") % myGPUpos.toString()
                 % gridSizeLocal.toString() % gridOffset.toString();
 
@@ -294,6 +301,12 @@ namespace picongpu
 
             GridLayout<simDim> layout(gridSizeLocal, GuardSize::toRT() * SuperCellSize::toRT());
             cellDescription = std::make_unique<MappingDesc>(layout.sizeND(), DataSpace<simDim>(GuardSize::toRT()));
+
+            for(uint32_t dim = 0; dim < simDim; ++dim)
+            {
+                std::cout<<"Debug in include/picongpu/simulation/control/Simulation.hpp/pluginLoad cycle dim "<< dim << std::endl;
+                std::cout<<"Debug GuardSize::toRT() "<< GuardSize::toRT()[dim] << " SuperCellSize " <<  SuperCellSize::toRT()[dim] << std::endl;
+            }
 
             if(gc.getGlobalRank() == 0)
             {
@@ -747,8 +760,11 @@ namespace picongpu
 
         void initFields(DataConnector& dataConnector)
         {
+            std::cout << "Debug in picongpu/include/picongpu/simulation/control/Simulation.hpp/initFields" << std::endl;
+            std::cout << "Debug in picongpu/include/picongpu/simulation/control/Simulation.hpp/initFields call FieldB constructor" << std::endl;
             auto fieldB = std::make_unique<FieldB>(*cellDescription);
             dataConnector.consume(std::move(fieldB));
+            std::cout << "Debug in picongpu/include/picongpu/simulation/control/Simulation.hpp/initFields call FieldE constructor" << std::endl;
             auto fieldE = std::make_unique<FieldE>(*cellDescription);
             dataConnector.consume(std::move(fieldE));
 
@@ -761,13 +777,13 @@ namespace picongpu
             std::cout << std::endl;
             auto fieldJ = std::make_unique<FieldJ>(*cellDescription);
             dataConnector.consume(std::move(fieldJ));
-            auto fieldV = std::make_unique<FieldTmp>(*cellDescription, 0);
-            dataConnector.consume(std::move(fieldV));
-            auto fieldRho = std::make_unique<FieldTmp>(*cellDescription, 1);
+           // auto fieldV = std::make_unique<FieldTmp>(*cellDescription, 0);
+           // dataConnector.consume(std::move(fieldV));
+            auto fieldRho = std::make_unique<FieldRho>(*cellDescription,0);
             dataConnector.consume(std::move(fieldRho));
-            
+            int countTmp = 1; 
 
-            for(uint32_t slot = 2; slot < fieldTmpNumSlots + 2; ++slot)
+            for(uint32_t slot = countTmp; slot < fieldTmpNumSlots + countTmp  ; ++slot)
             {   std::cout << "Field tmp "<< slot << std::endl;
                 auto fieldTmp = std::make_unique<FieldTmp>(*cellDescription, slot);
                 dataConnector.consume(std::move(fieldTmp));

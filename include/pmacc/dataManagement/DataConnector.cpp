@@ -31,6 +31,7 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
+#include <iostream>
 
 
 namespace pmacc
@@ -105,6 +106,8 @@ namespace pmacc
             auto it = datasets.rbegin();
             log<ggLog::MEMORY>("DataConnector: unshared '%1%' (%2% uses left)") % (*it)->getUniqueId()
                 % (it->use_count() - 1);
+            //printf("Debug DataConnector: unshared '%1%' (%2% uses left)") % (*it)->getUniqueId() % (it->use_count() - 1);
+            std::cout << "Debug DataConnector: unshared '" << (*it)->getUniqueId() << "' (" << (it->use_count() - 1) << " uses left)" << std::endl;
             datasets.pop_back();
         }
     }

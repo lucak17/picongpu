@@ -33,6 +33,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <iostream>
 
 
 namespace picongpu
@@ -44,6 +45,7 @@ namespace picongpu
             GetLowerMargin<fields::Solver, FieldE>::type::toRT(),
             GetUpperMargin<fields::Solver, FieldE>::type::toRT())
     {
+        std::cout<< "Debug in include/picongpu/fields/FieldE.hpp/constructor END "<<std::endl;
     }
 
     FieldE::UnitValueType FieldE::getUnit()

@@ -64,6 +64,7 @@ namespace pmacc
     template<unsigned DIM>
     SimulationHelper<DIM>::~SimulationHelper()
     {
+        std::cout << "Debug in include/pmacc/simulationControl/SimulationHelper.hpp/destructor"<< std::endl;
         {
             // notify all concurrent threads to exit
             std::unique_lock<std::mutex> lk(this->concurrentThreadMutex);
@@ -76,7 +77,7 @@ namespace pmacc
         tSimulation.toggleEnd();
         if(output)
         {
-            std::cout << "full simulation time: " << tSimulation.printInterval() << " = " << std::fixed
+            std::cout << "In include/pmacc/simulationControl/SimulationHelper.hpp/destructor full simulation time: " << tSimulation.printInterval() << " = " << std::fixed
                       << std::setprecision(3) << (tSimulation.getInterval() / 1000.)
                       << std::resetiosflags(std::ios::showbase) << " sec" << std::endl;
         }
@@ -110,7 +111,8 @@ namespace pmacc
             /* can be spared for better scalings, but allows to spare the
              * time for checkpointing if some ranks died */
             MPI_CHECK(MPI_Barrier(gc.getCommunicator().getMPIComm()));
-
+            
+            std::cout << "Debug: START dump checkpoint in SimulationHelper<DIM>::dumpOneStep step " << currentStep <<  std::endl;
             /* create directory containing checkpoints  */
             if(numCheckpoints == 0)
             {
@@ -133,7 +135,7 @@ namespace pmacc
 
             if(gc.getGlobalRank() == 0)
             {
-                std::cout << "Debug: write checkpoint step " << currentStep <<  std::endl; 
+               // std::cout << "Debug: write checkpoint step " << currentStep <<  std::endl; 
                 writeCheckpointStep(currentStep);
             }
             numCheckpoints++;
@@ -276,7 +278,7 @@ namespace pmacc
                 movingWindowCheck(currentStep);
                 /* call all plugins */
                 notifyPlugins(currentStep);
-                /* dump at the beginning of the simulated step */
+                /* dump at the beginning of the simulated step ONLY checkpoints NOT standard openPMD output */
                 dumpOneStep(currentStep);
             }
 
@@ -454,10 +456,10 @@ namespace pmacc
     template<unsigned DIM>
     void SimulationHelper<DIM>::writeCheckpointStep(const uint32_t checkpointStep)
     {
-        std::cout << "Debug: I am in SimulationHelper<DIM>::writeCheckpointStep " << checkpointStep <<  std::endl;
+        std::cout << "Debug: END dump checkpoint in SimulationHelper<DIM>::writeCheckpointStep step " << checkpointStep <<  std::endl;
         std::ofstream file;
         const std::string checkpointMasterFile = checkpointDirectory + std::string("/") + CHECKPOINT_MASTER_FILE;
-        std::cout << "Debug: checkpoint master file " << checkpointMasterFile <<  std::endl;
+        // td::cout << "Debug: checkpoint master file " << checkpointMasterFile <<  std::endl;
         file.open(checkpointMasterFile.c_str(), std::ofstream::app);
 
         if(!file)

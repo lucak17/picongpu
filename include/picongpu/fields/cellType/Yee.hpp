@@ -158,5 +158,24 @@ namespace picongpu
             }
         };
 
+
+        /** position (floatD_X in case of T_simDim == simDim) in cell, wrapped in
+         * one-component vector since it's a scalar field with only one component, for the
+         * scalar field FieldTmp
+         */
+        template<uint32_t T_simDim>
+        struct FieldPosition<fields::cellType::Yee, FieldV, T_simDim>
+        {
+            using FieldPos = pmacc::math::Vector<float_X, T_simDim>;
+            using ReturnType = pmacc::math::Vector<FieldPos, DIM1>;
+
+            HDINLINE FieldPosition() = default;
+
+            HDINLINE ReturnType operator()() const
+            {
+                return ReturnType(FieldPos::create(0.0));
+            }
+        };
+
     } // namespace traits
 } // namespace picongpu

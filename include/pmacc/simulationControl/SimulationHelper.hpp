@@ -31,6 +31,7 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
 
 
 namespace pmacc
@@ -135,6 +136,7 @@ namespace pmacc
 
         void pluginUnload() override
         {
+            std::cout<<"Debug in include/pmacc/simulationControl/SimulationHelper.hpp/pluginUnload "<< std::endl; 
         }
 
         void restart(uint32_t, const std::string) override

@@ -190,6 +190,7 @@ namespace picongpu
             {
                 static pmacc::traits::StringProperty getStringProperties()
                 {
+                    // printf("Debug in include/picongpu/fields/currentInterpolation/Binomial.hpp/getstringProperties \n");
                     pmacc::traits::StringProperty propList("name", "Binomial");
                     propList["param"] = "period=1;numPasses=1;compensator=false";
                     return propList;
