@@ -25,10 +25,12 @@
 #include "picongpu/simulation_defines.hpp"
 
 #include "picongpu/MetadataAggregator.hpp"
-#include "picongpu/fields/FieldB.hpp"
-#include "picongpu/fields/FieldE.hpp"
-#include "picongpu/fields/FieldJ.hpp"
-#include "picongpu/fields/FieldTmp.hpp"
+#include "picongpu/fields/Fields.hpp"
+//#include "picongpu/fields/FieldB.hpp"
+//#include "picongpu/fields/FieldE.hpp"
+//#include "picongpu/fields/FieldV.hpp"
+//#include "picongpu/fields/FieldJ.hpp"
+//#include "picongpu/fields/FieldTmp.hpp"
 #include "picongpu/fields/MaxwellSolver/Solvers.hpp"
 #include "picongpu/fields/absorber/pml/Field.hpp"
 #include "picongpu/fields/background/cellwiseOperation.hpp"
@@ -525,13 +527,17 @@ namespace picongpu
             DataConnector& dc = Environment<>::get().DataConnector();
             auto fieldE = dc.get<FieldE>(FieldE::getName());
             auto fieldB = dc.get<FieldB>(FieldB::getName());
+            auto fieldV = dc.get<FieldV>(FieldV::getName());
 
             // generate valid GUARDS (overwrite)
+            
             EventTask eRfieldE = fieldE->asyncCommunication(eventSystem::getTransactionEvent());
             eventSystem::setTransactionEvent(eRfieldE);
             EventTask eRfieldB = fieldB->asyncCommunication(eventSystem::getTransactionEvent());
             eventSystem::setTransactionEvent(eRfieldB);
-
+            EventTask eRfieldV = fieldV->asyncCommunication(eventSystem::getTransactionEvent());
+            eventSystem::setTransactionEvent(eRfieldV);
+            
             return step;
         }
 
@@ -767,6 +773,9 @@ namespace picongpu
             std::cout << "Debug in picongpu/include/picongpu/simulation/control/Simulation.hpp/initFields call FieldE constructor" << std::endl;
             auto fieldE = std::make_unique<FieldE>(*cellDescription);
             dataConnector.consume(std::move(fieldE));
+            std::cout << "Debug in picongpu/include/picongpu/simulation/control/Simulation.hpp/initFields call FieldV constructor" << std::endl;
+            auto fieldV = std::make_unique<FieldV>(*cellDescription);
+            dataConnector.consume(std::move(fieldV));
 
             std::cout << "Unit E " << fieldE->getUnit() << std::endl;
             std::cout << "Unit dimension E1 " << fieldE->getUnitDimension()[0] << std::endl;
@@ -779,7 +788,7 @@ namespace picongpu
             dataConnector.consume(std::move(fieldJ));
            // auto fieldV = std::make_unique<FieldTmp>(*cellDescription, 0);
            // dataConnector.consume(std::move(fieldV));
-            auto fieldRho = std::make_unique<FieldRho>(*cellDescription,0);
+            auto fieldRho = std::make_unique<FieldRho>(*cellDescription);
             dataConnector.consume(std::move(fieldRho));
             int countTmp = 1; 
 
@@ -829,9 +838,10 @@ namespace picongpu
              * - LocalIPDSupportField(s)
              * - LocalIPDInputField(s)
              */
-            std::array<std::string, 4> const fieldNames{
+            std::array<std::string, 5> const fieldNames{
                 {FieldE::getName(),
                  FieldB::getName(),
+                 FieldV::getName(),
                  fields::absorber::pml::FieldE::getName(),
                  fields::absorber::pml::FieldB::getName()}};
             std::for_each(fieldNames.cbegin(), fieldNames.cend(), resetField);

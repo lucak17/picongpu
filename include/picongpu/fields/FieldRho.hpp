@@ -59,7 +59,14 @@ namespace picongpu
      */
     class FieldRho : public FieldTmp
     {
+    public:
         using FieldTmp::FieldTmp;
+
+
+        FieldRho(MappingDesc const& cellDescription) : FieldTmp(cellDescription, 0), id(getName())
+        {
+        }
+
 
         static UnitValueType getUnit()
         {
@@ -91,6 +98,12 @@ namespace picongpu
             return "Rho";
         }
 
+        /** 
+        std::string getId()
+        {
+            return std::to_string(m_slotId);
+        }
+        */    
     private:
         //! Host-device buffer for current density values
         std::unique_ptr<GridBuffer<ValueType, simDim>> fieldTmp;
@@ -100,6 +113,8 @@ namespace picongpu
 
         //! Index of the temporary field
         uint32_t m_slotId;
+
+        pmacc::SimulationDataId id;
 
         //! Events for communication
         EventTask m_scatterEv;

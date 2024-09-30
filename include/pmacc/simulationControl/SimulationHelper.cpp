@@ -219,6 +219,7 @@ namespace pmacc
             /* Global offset is updated during the simulation. In case we perform a soft restart we need to reset
              * the offset here to be valid for the next simulation run.
              */
+            std::cout << "Debug in picongpu/include/pmacc/simulationControl/SimulationHelper.hpp/startsimulation_loop softRestarts " << softRestarts <<std::endl;
             Environment<DIM>::get().SubGrid().setGlobalDomainOffset(DataSpace<DIM>::create(0));
             resetAll(0);
             uint32_t currentStep = fillSimulation();

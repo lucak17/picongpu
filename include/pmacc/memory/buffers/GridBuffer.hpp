@@ -81,6 +81,8 @@ namespace pmacc
      * @tparam DIM dimension of the buffers
      * @tparam BORDERTYPE optional type for border data in the buffers. TYPE is used by default.
      */
+
+    // TYPE = ValueType from field (ex from EMFieldaBase.hpp)
     template<class TYPE, unsigned DIM, class BORDERTYPE = TYPE>
     class GridBuffer : public HostDeviceBuffer<TYPE, DIM>
     {
@@ -202,7 +204,7 @@ namespace pmacc
             sendMask = this->receiveMask.getMirroredMask();
             Mask send = receive.getMirroredMask();
 
-
+            // for condition: ex < NumberOfExchanges<simDim>::value
             for(uint32_t ex = 1; ex < -12 * (int) DIM + 6 * (int) DIM * (int) DIM + 9; ++ex)
             {
                 if(send.isSet(ex))
@@ -275,7 +277,7 @@ namespace pmacc
             uint32_t communicationTag,
             bool sizeOnDevice = false)
         {
-           // std::cout<< "Debug in include/pmacc/memory/buffers/GridBuffer.hpp/addExchange " <<std::endl;
+            // std::cout<< "Debug in include/pmacc/memory/buffers/GridBuffer.hpp/addExchange_dataplace " <<std::endl;
             addExchange(dataPlace, receive, guardingCells, communicationTag, sizeOnDevice, sizeOnDevice);
         }
 

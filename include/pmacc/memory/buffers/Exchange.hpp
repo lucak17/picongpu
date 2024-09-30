@@ -32,6 +32,7 @@
 #include "pmacc/types.hpp"
 
 #include <memory>
+#include <iostream>
 
 
 namespace pmacc
@@ -74,7 +75,7 @@ namespace pmacc
                 if(DIM > dim && exchangeDimensions[dim] == 1)
                     tmp_size[dim] = guardingCells[dim];
             }
-
+            std::cout << "Debug in picongpu/include/pmacc/memory/buffers/Exchange.hpp/constructor sizeWithoutGuardND "<< memoryLayout.sizeWithoutGuardND()<< " guardSize "<< memoryLayout.guardSizeND() << " tmp_size "<< tmp_size << std::endl;
             /*This is only a pointer to other device data
              */
             using DeviceBuffer = DeviceBuffer<TYPE, DIM>;

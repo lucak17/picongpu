@@ -69,10 +69,14 @@ namespace picongpu
             std::cout<< "Debug in include/picongpu/fields/EMFieldbase.hpp/constructor START"<<std::endl;
             //std::cout<< "Debug in include/picongpu/fields/EMFieldbase.hpp/constructor derivative margins"<<std::endl;
             for(uint32_t i=0; i<simDim; i++)
-            {
+            {   
+                //std::cout<< "Debug in include/picongpu/fields/EMFieldbase.hpp/constructor gridLayout dim "<< i << " : " << cellDescription.getGridLayout()[i]<< std::endl;
                 std::cout<< "Debug in include/picongpu/fields/EMFieldbase.hpp/constructor derivative LowerMargin dim "<< i << " : " << lowerMargin[i]<< std::endl;
                 std::cout<< "Debug in include/picongpu/fields/EMFieldbase.hpp/constructor derivative UpperMargin dim "<< i << " : " << upperMargin[i]<< std::endl;
             }
+            std::cout<< "Debug in include/picongpu/fields/EMFieldbase.hpp/constructor gridLayout.sizeWithoutGuardND() "<< cellDescription.getGridLayout().sizeWithoutGuardND() <<std::endl;
+            std::cout<< "Debug in include/picongpu/fields/EMFieldbase.hpp/constructor gridLayout.sizeND() "<< cellDescription.getGridLayout().sizeND() <<std::endl;
+            
             buffer = std::make_unique<Buffer>(cellDescription.getGridLayout());
             std::cout<< "Debug in include/picongpu/fields/EMFieldbase.hpp/constructor BUFFER END"<<std::endl;
 
@@ -133,14 +137,13 @@ namespace picongpu
                 for(uint32_t d = 0; d < simDim; ++d)
                 {
                     guardingCells[d] = (relativeMask[d] == -1 ? originGuard[d] : endGuard[d]);
-                    if (i==19)
-                    {
-                        std::cout<< " Debug in include/picongpu/fields/EMFieldBase.hpp/constructor guarding cells dim "<< d << " relativeMask "<< relativeMask[d] <<std::endl;
-                        std::cout<< " Debug in include/picongpu/fields/EMFieldBase.hpp/constructor guarding cells dim "<< d << " guardingCells "<< guardingCells[d] <<std::endl;
-                    }
-
+                   // if (i==19)
+                   // {
+                   //     std::cout<< " Debug in include/picongpu/fields/EMFieldBase.hpp/constructor guarding cells dim "<< d << " relativeMask "<< relativeMask[d] <<std::endl;
+                   //     std::cout<< " Debug in include/picongpu/fields/EMFieldBase.hpp/constructor guarding cells dim "<< d << " guardingCells "<< guardingCells[d] <<std::endl;
+                   // }
+                    std::cout<< " Debug in include/picongpu/fields/EMFieldBase.hpp/constructor addExchange exchangeNum "<< i  << " dim "<< d << " guardingCells "<< guardingCells[d] <<std::endl;
                 }
-                    
                 buffer->addExchange(GUARD, i, guardingCells, commTag);
             }
         }

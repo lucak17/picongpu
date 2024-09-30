@@ -136,6 +136,7 @@ namespace picongpu
                     guardingCells[d] = (relativeMask[d] == -1 ? originGuard[d] : endGuard[d]);
                 buffer->addExchange(GUARD, i, guardingCells, commTag);
             }
+            std::cout<< "Debug in include/picongpu/fields/FieldV.hpp/constructor END "<<std::endl;
 
         }
 
@@ -204,12 +205,12 @@ namespace picongpu
         }
         
         //Get units of field components
-        UnitValueType getUnit()
+        static UnitValueType getUnit()
         {
             return UnitValueType{sim.unit.eField() * sim.unit.length()};
         }
 
-        std::vector<float_64> getUnitDimension()
+        static std::vector<float_64> getUnitDimension()
         {
             /* V is in volts: V  = kg * m^2 / (A * s^3)
             *   -> L^2 * M * T^-3 * I^-1
@@ -222,7 +223,7 @@ namespace picongpu
             return unitDimension;
         }
 
-        std::string getName()
+        static std::string getName()
         {
             return "V";
         }

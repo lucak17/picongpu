@@ -1,0 +1,153 @@
+/* Copyright 2013-2024 Luca Pennati
+ * This file is part of PIConGPU.
+ *
+ * PIConGPU is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PIConGPU is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PIConGPU.
+ * If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#pragma once
+
+#include "picongpu/simulation_defines.hpp"
+
+
+#include <pmacc/algorithms/math/floatMath/floatingPoint.tpp>
+#include <pmacc/dimensions/SuperCellDescription.hpp>
+#include <pmacc/lockstep.hpp>
+#include <pmacc/mappings/threads/ThreadCollective.hpp>
+#include <pmacc/math/operation.hpp>
+#include <pmacc/memory/boxes/CachedBox.hpp>
+
+#include <cstdint>
+
+
+namespace picongpu
+{
+    namespace fields
+    {
+        namespace maxwellSolver
+        {
+            namespace fdtdPoisson
+            {
+                class setFieldBConstantValueFunctor
+                {
+                public:
+                    HDINLINE setFieldBConstantValueFunctor() = default;
+
+                    HDINLINE setFieldBConstantValueFunctor(const setFieldBConstantValueFunctor&) = default;
+
+                    HDINLINE setFieldBConstantValueFunctor& operator=(const setFieldBConstantValueFunctor&) = default;
+
+                    /** Update magnetic field at the given position
+                     *
+                     * @tparam T_LocalEBox local electric field box type
+                     * @tparam T_LocalBBox local magnetic field box type
+                     *
+                     * @param gridIndex index of the updated field element, with guards
+                     * @param localE electric field box shifted to position gridIndex,
+                     *               note that it is the box, not the value
+                     * @param localB magnetic field box shifted to position gridIndex,
+                     *               note that it is the box, not the value
+                     *
+                     * @return update the value pointed to by localB
+                     */
+                    template<typename T_LocalBBox>
+                    DINLINE void operator()(
+                        pmacc::DataSpace<simDim> const& gridIndex,
+                        T_LocalBBox localB, float3_X const valueB)
+                    {
+
+                        localB() = valueB;
+                    }
+                };
+
+
+
+                //! Kernel to update each cell
+                struct KernelUpdateField
+                {
+                    HDINLINE KernelUpdateField() = default;
+
+                    HDINLINE KernelUpdateField(const KernelUpdateField&) = default;
+
+                    HDINLINE KernelUpdateField& operator=(const KernelUpdateField&) = default;
+
+                    /** Update the yee field using the given functor
+                     *
+                     * @tparam T_Worker lockstep worker type
+                     * @tparam T_Mapping mapper functor type
+                     * @tparam T_StencilFunctor stencil functor type to update a cell,
+                     *         adheres the StencilFunctor concept
+                     * @tparam T_SrcBox pmacc::DataBox, source field box type
+                     * @tparam T_DestBox pmacc::DataBox, destination field box type
+                     *
+                     * @param worker lockstep worker
+                     * @param mapper functor to map a block to a supercell
+                     * @param stencilFunctor stencil functor
+                     * @param srcField source field iterator (is not allowed to be an alias of destField data)
+                     * @param destField destination field iterator
+                     */
+                    template<
+                        typename T_Worker,
+                        typename T_Mapping,
+                        typename T_StencilFunctor,
+                        typename T_DestBox>
+                    DINLINE void operator()(
+                        T_Worker const& worker,
+                        T_Mapping const mapper,
+                        T_StencilFunctor stencilFunctor,
+                        T_DestBox destField,
+                        float3_X const valueB) const
+                    {
+                        /* Each block processes all cells of a supercell,
+                         * the index includes guards, same as all indices in this kernel
+                         */
+                        auto const beginCellIdx
+                            = mapper.getSuperCellIndex(worker.blockDomIdxND()) * MappingDesc::SuperCellSize::toRT();
+
+                        // Description of the area and guards where the stencil is performed.
+                       // using StencilCfg = pmacc::SuperCellDescription<SuperCellSize,
+                        //    typename traits::GetLowerMargin<T_StencilFunctor>::type,
+                        //    typename traits::GetUpperMargin<T_StencilFunctor>::type>;
+                        /* Cache source field values of the supercell including guard cells to perform the stencil
+                         * functor
+                         */
+                        pmacc::math::operation::Assign assign;
+                        //auto srcFieldBlock = srcField.shift(beginCellIdx);
+                       // auto cacheStencilArea = makeThreadCollective<StencilCfg>();
+                       // auto cachedSrcField
+                        //    = CachedBox::create<0u, typename T_SrcBox::ValueType>(worker, StencilCfg{});
+                       // cacheStencilArea(worker, assign, cachedSrcField, srcFieldBlock);
+
+                        worker.sync();
+
+                        constexpr uint32_t cellsPerSuperCell = pmacc::math::CT::volume<SuperCellSize>::type::value;
+                        // Execute the stencil functor for each cell in the supercell.
+                        lockstep::makeForEach<cellsPerSuperCell>(worker)(
+                            [&](int32_t const linearIdx)
+                            {
+                                auto const idxInSuperCell = pmacc::math::mapToND(SuperCellSize::toRT(), linearIdx);
+                                auto const gridIdx = beginCellIdx + idxInSuperCell;
+                                stencilFunctor(
+                                    gridIdx,
+                                    destField.shift(gridIdx),
+                                    valueB);
+                            });
+                    }
+                };
+                
+                
+            } // namespace fdtdPoisson
+        } // namespace maxwellSolver
+    } // namespace fields
+} // namespace picongpu

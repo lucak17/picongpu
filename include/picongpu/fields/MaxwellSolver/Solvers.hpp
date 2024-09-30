@@ -26,3 +26,4 @@
 #include "picongpu/fields/MaxwellSolver/None/None.hpp"
 #include "picongpu/fields/MaxwellSolver/Substepping/Substepping.hpp"
 #include "picongpu/fields/MaxwellSolver/Yee/Yee.hpp"
+#include "picongpu/fields/MaxwellSolver/Poisson/Poisson.hpp"
