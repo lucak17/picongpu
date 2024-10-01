@@ -788,15 +788,23 @@ namespace picongpu
             dataConnector.consume(std::move(fieldJ));
            // auto fieldV = std::make_unique<FieldTmp>(*cellDescription, 0);
            // dataConnector.consume(std::move(fieldV));
+            std::cout << "Debug in picongpu/include/picongpu/simulation/control/Simulation.hpp/initFields FieldRho constructor START" << std::endl;
             auto fieldRho = std::make_unique<FieldRho>(*cellDescription);
+            std::cout << "Debug in picongpu/include/picongpu/simulation/control/Simulation.hpp/initFields FieldRho getUniqueId " << fieldRho->getUniqueId() << " getName " << FieldRho::getName() << std::endl;
             dataConnector.consume(std::move(fieldRho));
-            int countTmp = 1; 
+            std::cout << "Debug in picongpu/include/picongpu/simulation/control/Simulation.hpp/initFields FieldRho constructor END" << std::endl;
+           // std::shared_ptr<FieldRho> fieldRho2;
+          //  fieldRho2 = dataConnector.get<FieldRho>(FieldRho::getUniqueId(0));
+            
+            uint32_t countTmp = 0; 
 
             for(uint32_t slot = countTmp; slot < fieldTmpNumSlots + countTmp  ; ++slot)
             {   std::cout << "Field tmp "<< slot << std::endl;
                 auto fieldTmp = std::make_unique<FieldTmp>(*cellDescription, slot);
                 dataConnector.consume(std::move(fieldTmp));
             }
+
+
         }
 
         /** Reset all fields

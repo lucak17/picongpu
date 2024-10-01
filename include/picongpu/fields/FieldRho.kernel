@@ -1,0 +1,84 @@
+/* Copyright 2013-2024 Luca Pennati
+ *
+ * This file is part of PIConGPU.
+ *
+ * PIConGPU is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PIConGPU is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PIConGPU.
+ * If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#pragma once
+
+#include "picongpu/simulation_defines.hpp"
+
+#include "picongpu/algorithms/Set.hpp"
+
+#include <pmacc/lockstep.hpp>
+#include <pmacc/mappings/threads/ThreadCollective.hpp>
+#include <pmacc/math/operation.hpp>
+#include <pmacc/memory/boxes/CachedBox.hpp>
+#include <pmacc/memory/shared/Allocate.hpp>
+#include <pmacc/particles/algorithm/ForEach.hpp>
+#include <pmacc/particles/frame_types.hpp>
+#include <pmacc/particles/memory/boxes/ParticlesBox.hpp>
+
+
+namespace picongpu
+{
+        using namespace pmacc;
+
+        /** discretized field-representation of a derived species property
+         *
+         * The derived property of all particles from a species is evaluated with
+         * the species' shape to the field grid and reduced of all contributing
+         * particles.
+         *
+         * @tparam T_BlockDescription stance area description of the user functor
+         */
+        template<typename T_BlockDescription>
+        struct KernelComputeSupercellsRho
+        {
+            /** derive species property
+             *
+             * @tparam T_TmpBox pmacc::DataBox, type of the scalar field box
+             * @tparam T_ParBox pmacc::ParticlesBox, particle box type
+             * @tparam T_FrameSolver functor type to operate on a particle frame
+             * @tparam T_Mapping mapper functor type
+             * @tparam T_ParticleFilter particle filter type
+             *
+             * @param fieldJ field with particle current
+             * @param boxPar particle memory
+             * @param frameSolver functor to calculate the current for a frame
+             * @param mapper functor to map a block to a supercell
+             * @param particleFilter filter used to choose particles contributing to field value
+             */
+            template<
+                typename T_TmpBox,
+                typename T_ParBox,
+                typename T_FrameSolver,
+                typename T_Mapping,
+                typename T_Worker,
+                typename T_ParticleFilter>
+            DINLINE void operator()(
+                T_Worker const& worker,
+                T_TmpBox fieldTmp,
+                T_ParBox boxPar,
+                T_FrameSolver frameSolver,
+                T_ParticleFilter particleFilter,
+                T_Mapping mapper) const
+            {
+          
+            }
+        };
+//    } // namespace fieldRhoCompute
+} // namespace picongpu

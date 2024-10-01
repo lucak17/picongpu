@@ -71,4 +71,7 @@ namespace picongpu
     /** Electrostatic Potential V, @see FieldV.hpp */
     class FieldV;
 
+    /** Total charge deinsity field Rho, @see FieldRho.hpp */
+    class FieldRho;
+
 } // namespace picongpu

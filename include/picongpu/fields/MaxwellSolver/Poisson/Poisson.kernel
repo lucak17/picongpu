@@ -70,6 +70,39 @@ namespace picongpu
                         localB() = valueB;
                     }
                 };
+                
+
+                class setFieldRhoConstantValueFunctor
+                {
+                public:
+                    HDINLINE setFieldRhoConstantValueFunctor() = default;
+
+                    HDINLINE setFieldRhoConstantValueFunctor(const setFieldRhoConstantValueFunctor&) = default;
+
+                    HDINLINE setFieldRhoConstantValueFunctor& operator=(const setFieldRhoConstantValueFunctor&) = default;
+
+                    /** Update magnetic field at the given position
+                     *
+                     * @tparam T_LocalEBox local electric field box type
+                     * @tparam T_LocalBBox local magnetic field box type
+                     *
+                     * @param gridIndex index of the updated field element, with guards
+                     * @param localE electric field box shifted to position gridIndex,
+                     *               note that it is the box, not the value
+                     * @param localB magnetic field box shifted to position gridIndex,
+                     *               note that it is the box, not the value
+                     *
+                     * @return update the value pointed to by localB
+                     */
+                    template<typename T_LocalRhoBox>
+                    DINLINE void operator()(
+                        pmacc::DataSpace<simDim> const& gridIndex,
+                        T_LocalRhoBox localRho, float_X const valueRho)
+                    {
+
+                        localRho() = valueRho;
+                    }
+                };
 
 
 
@@ -101,13 +134,14 @@ namespace picongpu
                         typename T_Worker,
                         typename T_Mapping,
                         typename T_StencilFunctor,
-                        typename T_DestBox>
+                        typename T_DestBox,
+                        typename T_Value>
                     DINLINE void operator()(
                         T_Worker const& worker,
                         T_Mapping const mapper,
                         T_StencilFunctor stencilFunctor,
                         T_DestBox destField,
-                        float3_X const valueB) const
+                        T_Value const valueField) const
                     {
                         /* Each block processes all cells of a supercell,
                          * the index includes guards, same as all indices in this kernel
@@ -141,7 +175,7 @@ namespace picongpu
                                 stencilFunctor(
                                     gridIdx,
                                     destField.shift(gridIdx),
-                                    valueB);
+                                    valueField);
                             });
                     }
                 };

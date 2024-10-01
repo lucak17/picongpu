@@ -142,7 +142,7 @@ namespace picongpu
                    //     std::cout<< " Debug in include/picongpu/fields/EMFieldBase.hpp/constructor guarding cells dim "<< d << " relativeMask "<< relativeMask[d] <<std::endl;
                    //     std::cout<< " Debug in include/picongpu/fields/EMFieldBase.hpp/constructor guarding cells dim "<< d << " guardingCells "<< guardingCells[d] <<std::endl;
                    // }
-                    std::cout<< " Debug in include/picongpu/fields/EMFieldBase.hpp/constructor addExchange exchangeNum "<< i  << " dim "<< d << " guardingCells "<< guardingCells[d] <<std::endl;
+                   // std::cout<< " Debug in include/picongpu/fields/EMFieldBase.hpp/constructor addExchange exchangeNum "<< i  << " dim "<< d << " guardingCells "<< guardingCells[d] <<std::endl;
                 }
                 buffer->addExchange(GUARD, i, guardingCells, commTag);
             }

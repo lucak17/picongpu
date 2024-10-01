@@ -1,5 +1,4 @@
-/* Copyright 2013-2023 Axel Huebl, Heiko Burau, Rene Widera, Richard Pausch,
- *                     Benjamin Worpitz, Sergei Bastrakov
+/* Copyright 2013-2024 Luca Pennati
  *
  * This file is part of PIConGPU.
  *
@@ -24,6 +23,7 @@
 // from EMFieldBase.hpp
 #include "picongpu/defines.hpp"
 
+#include <pmacc/algorithms/PromoteType.hpp>
 #include <pmacc/dataManagement/ISimulationData.hpp>
 #include <pmacc/fields/SimulationFieldHelper.hpp>
 #include <pmacc/mappings/simulation/GridController.hpp>
@@ -31,29 +31,6 @@
 #include <pmacc/memory/boxes/DataBox.hpp>
 #include <pmacc/memory/boxes/PitchedBox.hpp>
 #include <pmacc/memory/buffers/GridBuffer.hpp>
-
-
-// from EMFieldBase.x.cpp
-#include "picongpu/simulation_defines.hpp"
-
-//#include "picongpu/fields/MaxwellSolver/Solvers.hpp"
-//#include "picongpu/particles/filter/filter.hpp"
-//#include "picongpu/particles/traits/GetInterpolation.hpp"
-//#include "picongpu/particles/traits/GetMarginPusher.hpp"
-//#include "picongpu/traits/GetMargin.hpp"
-#include "picongpu/traits/SIBaseUnits.hpp"
-
-#include <pmacc/dataManagement/DataConnector.hpp>
-#include <pmacc/dimensions/SuperCellDescription.hpp>
-#include <pmacc/mappings/kernel/ExchangeMapping.hpp>
-#include <pmacc/traits/GetUniqueTypeId.hpp>
-
-// from EField.hpp
-#include <pmacc/algorithms/PromoteType.hpp>
-
-// from EField.x.cpp
-#include "picongpu/simulation_types.hpp"
-//#include "picongpu/traits/GetMargin.hpp"
 
 
 #include <type_traits>
@@ -114,127 +91,57 @@ namespace picongpu
          */
 
 
-        FieldV(MappingDesc const& cellDescription):SimulationFieldHelper<MappingDesc>(cellDescription),id(getName())
-        {
-            buffer = std::make_unique<Buffer>(cellDescription.getGridLayout());
-
-            // @todo fix margins
-            math::Vector<int, simDim> originGuard = {1,1,1};
-            math::Vector<int, simDim> endGuard = {1,1,1};
-
-            auto const commTag = pmacc::traits::getUniqueId<uint32_t>();
-
-            for(uint32_t i = 1; i < NumberOfExchanges<simDim>::value; ++i)
-            {
-                DataSpace<simDim> relativeMask = Mask::getRelativeDirections<simDim>(i);
-                /* guarding cells depend on direction
-                 * for negative direction use originGuard else endGuard (relative direction ZERO is ignored)
-                 * don't switch end and origin because this is a read buffer and no send buffer
-                 */
-                DataSpace<simDim> guardingCells;
-                for(uint32_t d = 0; d < simDim; ++d)
-                    guardingCells[d] = (relativeMask[d] == -1 ? originGuard[d] : endGuard[d]);
-                buffer->addExchange(GUARD, i, guardingCells, commTag);
-            }
-            std::cout<< "Debug in include/picongpu/fields/FieldV.hpp/constructor END "<<std::endl;
-
-        }
-
+        FieldV(MappingDesc const& cellDescription);
         
 
         //! Get a reference to the host-device buffer for the field values
-        Buffer& getGridBuffer()
-        {
-            return *buffer;
-        }
+        Buffer& getGridBuffer();
 
         //! Get the grid layout
-        GridLayout<simDim> getGridLayout()
-        {
-            return cellDescription.getGridLayout();
-        }
+        GridLayout<simDim> getGridLayout();
 
         //! Get the host data box for the field values
-        DataBoxType getHostDataBox()
-        {
-            return buffer->getHostBuffer().getDataBox();
-        }
+        DataBoxType getHostDataBox();
 
         //! Get the device data box for the field values
-        DataBoxType getDeviceDataBox()
-        {
-            return buffer->getDeviceBuffer().getDataBox();
-        }
+        DataBoxType getDeviceDataBox();
 
         /** Start asynchronous communication of field values
          *
          * @param serialEvent event to depend on
          */
-        EventTask asyncCommunication(EventTask serialEvent)
-        {
-            EventTask eB = buffer->asyncCommunication(serialEvent);
-            return eB;
-        }
+        EventTask asyncCommunication(EventTask serialEvent);
 
         /** Reset the host-device buffer for field values
          *
          * @param currentStep index of time iteration
          */
-        void reset(uint32_t currentStep) override
-        {
-            buffer->getHostBuffer().reset(true);
-            buffer->getDeviceBuffer().reset(false);
-        }
+        void reset(uint32_t currentStep) override;
 
         //! Synchronize device data with host data
-        void syncToDevice() override
-        {
-            buffer->hostToDevice();
-        }
+        void syncToDevice() override;
 
         //! Synchronize host data with device data
-        void synchronize() override
-        {
-            buffer->deviceToHost();
-        }
+        void synchronize() override;
 
         //! Get id
-        pmacc::SimulationDataId getUniqueId() override
-        {
-            return id;
-        }
+        pmacc::SimulationDataId getUniqueId() override;
         
         //Get units of field components
-        static UnitValueType getUnit()
-        {
-            return UnitValueType{sim.unit.eField() * sim.unit.length()};
-        }
+        static UnitValueType getUnit();
 
-        static std::vector<float_64> getUnitDimension()
-        {
-            /* V is in volts: V  = kg * m^2 / (A * s^3)
-            *   -> L^2 * M * T^-3 * I^-1
-            */
-            std::vector<float_64> unitDimension(7, 0.0);
-            unitDimension.at(SIBaseUnits::length) = 2.0;
-            unitDimension.at(SIBaseUnits::mass) = 1.0;
-            unitDimension.at(SIBaseUnits::time) = -3.0;
-            unitDimension.at(SIBaseUnits::electricCurrent) = -1.0;
-            return unitDimension;
-        }
-
-        static std::string getName()
-        {
-            return "V";
-        }
-
-        /** Get unit representation as powers of the 7 base measures
+         /** Get unit representation as powers of the 7 base measures
          *
          * Characterizing the record's unit in SI
          * (length L, mass M, time T, electric current I,
          *  thermodynamic temperature theta, amount of substance N,
          *  luminous intensity J)
-         */        
+         */     
+        static std::vector<float_64> getUnitDimension();
+
+        static std::string getName();
+
+          
 
     private:
         //! Host-device buffer for field values

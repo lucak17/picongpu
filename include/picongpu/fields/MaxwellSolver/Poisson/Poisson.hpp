@@ -57,13 +57,17 @@ namespace picongpu
                     fieldE = dc.get<FieldE>(FieldE::getName());
                     fieldB = dc.get<FieldB>(FieldB::getName());
                     fieldV = dc.get<FieldV>(FieldV::getName());
+                    //std::cout << "Debug in picongpu/include/picongpu/fields/MaxwellSolver/Poisson/Poisson.hpp/constructor FieldRho name "<< FieldRho::getUniqueId(0) << std::endl;
                     fieldRho = dc.get<FieldRho>(FieldRho::getName());
+                    std::cout << "Debug in picongpu/include/picongpu/fields/MaxwellSolver/Poisson/Poisson.hpp/constructor FieldRho END name "<< FieldRho::getName() << std::endl;
                 }
 
                 void update_beforeCurrent(uint32_t const currentStep)
                 {   
                     float3_X valueB={1.0,2.0,3.0};
+                    float_X valueRho=2.5;
                     setFieldBConstantValue<CORE + BORDER>(valueB, currentStep);
+                    setFieldRhoConstantValue<CORE + BORDER>(valueRho, currentStep);
                     std::cout<< "Debug in include/picongpu/fields/MaxwellSolver/Poisson/Poisson.hpp/update_beforeCurrent step "<< currentStep <<std::endl;
                 }
 
@@ -84,7 +88,7 @@ namespace picongpu
 
                 static std::string getName()
                 {
-                    return "FieldSolverNone";
+                    return "FieldSolverPoisson";
                 }
 
                 /**
@@ -118,6 +122,17 @@ namespace picongpu
                                 fieldB->getDeviceDataBox(),valueB);
                 }
                 
+                template<uint32_t T_Area>
+                void setFieldRhoConstantValue(float_X const valueRho, float_X const currentStep)
+                {
+                    using Kernel = fdtdPoisson::KernelUpdateField;
+                    auto const mapper = pmacc::makeAreaMapper<T_Area>(cellDescription);
+
+                    PMACC_LOCKSTEP_KERNEL(Kernel{}).config(mapper.getGridDim(), SuperCellSize{})(
+                                mapper,
+                                fdtdPoisson::setFieldRhoConstantValueFunctor{},
+                                fieldRho->getDeviceDataBox(),valueRho);
+                }
 
                 MappingDesc const cellDescription;
                 std::shared_ptr<FieldE> fieldE;
@@ -131,7 +146,7 @@ namespace picongpu
             
             }; // class Poisson
 
-            /** Specialization of the CFL condition checker for the None solver
+            /** Specialization of the CFL condition checker for the Poisson solver
              *
              * @tparam T_Defer technical parameter to defer evaluation
              */
@@ -160,7 +175,7 @@ namespace picongpu
         template<typename T_Field>
         struct GetMargin<picongpu::fields::maxwellSolver::Poisson, T_Field>
         {
-            using LowerMargin = typename pmacc::math::CT::make_Int<simDim, 0>::type;
+            using LowerMargin = typename pmacc::math::CT::make_Int<simDim, 2>::type;
             using UpperMargin = LowerMargin;
         };
     } // namespace traits

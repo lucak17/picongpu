@@ -176,6 +176,20 @@ namespace picongpu
                 return ReturnType(FieldPos::create(0.0));
             }
         };
+        
+        template<uint32_t T_simDim>
+        struct FieldPosition<fields::cellType::Yee, FieldRho, T_simDim>
+        {
+            using FieldPos = pmacc::math::Vector<float_X, T_simDim>;
+            using ReturnType = pmacc::math::Vector<FieldPos, DIM1>;
+
+            HDINLINE FieldPosition() = default;
+
+            HDINLINE ReturnType operator()() const
+            {
+                return ReturnType(FieldPos::create(0.0));
+            }
+        };
 
     } // namespace traits
 } // namespace picongpu
