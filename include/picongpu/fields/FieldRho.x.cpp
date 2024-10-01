@@ -50,7 +50,7 @@
 namespace picongpu
 {
     using namespace pmacc;
-        /** 
+
     template<typename A, typename B>
     using SpeciesLowerMarginOp =
         typename pmacc::math::CT::max<A, typename GetLowerMargin<typename GetInterpolation<B>::type>::type>::type;
@@ -62,8 +62,6 @@ namespace picongpu
     using FieldRhoLowerMarginOp = typename pmacc::math::CT::max<A, typename GetLowerMargin<B>::type>::type;
     template<typename A, typename B>
     using FieldRhoUpperMarginOp = typename pmacc::math::CT::max<A, typename GetUpperMargin<B>::type>::type;
-    **/
-
     /** Create a field
      *
      * @param cellDescription mapping for kernels
@@ -87,14 +85,29 @@ namespace picongpu
          */
         const DataSpace<simDim> coreBorderSize = cellDescription.getGridLayout().sizeWithoutGuardND();
 
+        using VectorSpeciesWithInterpolation = typename pmacc::particles::traits::FilterByFlag<VectorAllSpecies, interpolation<>>::type;
+         /* ------------------ lower margin  ----------------------------------*/
+        using SpeciesLowerMargin = pmacc::mp_fold<VectorSpeciesWithInterpolation, typename pmacc::math::CT::make_Int<simDim, 0>::type, SpeciesLowerMarginOp>;
 
-        //const DataSpace<simDim> originGuard(LowerMargin().toRT());
-        //const DataSpace<simDim> endGuard(UpperMargin().toRT());
+        using FieldSolverLowerMargin = GetLowerMargin<fields::Solver>::type;
+
+        using LowerMargin = pmacc::math::CT::max<SpeciesLowerMargin, FieldSolverLowerMargin>::type;
+
+
+        /* ------------------ upper margin  -----------------------------------*/
+
+        using SpeciesUpperMargin = pmacc::mp_fold<VectorSpeciesWithInterpolation,typename pmacc::math::CT::make_Int<simDim, 0>::type,SpeciesUpperMarginOp>;
+
+        using FieldSolverUpperMargin = GetUpperMargin<fields::Solver>::type;
+
+        using UpperMargin = pmacc::math::CT::max<SpeciesUpperMargin, FieldSolverUpperMargin>::type;
+
+        const DataSpace<simDim> originGuard(LowerMargin().toRT());
+        const DataSpace<simDim> endGuard(UpperMargin().toRT());
         //const DataSpace<simDim> originGuard{3,3,3};
         //const DataSpace<simDim> endGuard{3,3,3};
-
-        DataSpace<simDim> originGuard = GetLowerMargin<fields::Solver, FieldRho>::type::toRT();
-        DataSpace<simDim> endGuard = GetUpperMargin<fields::Solver, FieldRho>::type::toRT();
+        //DataSpace<simDim> originGuard = GetLowerMargin<fields::Solver, FieldRho>::type::toRT();
+        //DataSpace<simDim> endGuard = GetUpperMargin<fields::Solver, FieldRho>::type::toRT();
 
         /*go over all directions*/
         for(uint32_t i = 1; i < NumberOfExchanges<simDim>::value; ++i)
