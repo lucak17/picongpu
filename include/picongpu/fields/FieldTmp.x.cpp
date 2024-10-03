@@ -105,6 +105,15 @@ namespace picongpu
         using LowerMargin = pmacc::math::CT::max<SpeciesFieldTmpLowerMargin, FieldSolverLowerMargin>::type;
 
 
+        for(uint32_t i=0; i<simDim; i++)
+            {
+                std::cout<< "Debug in picongpu/include/picongpu/fields/FieldTmp.hpp/constructor SpeciesLowerMargin dim "<< i << " : " <<SpeciesLowerMargin().toRT()[i]<< std::endl;
+                std::cout<< "Debug in picongpu/include/picongpu/fields/FieldTmp.hpp/constructor FieldTmpLowerMargin dim "<< i << " : "<< FieldTmpLowerMargin().toRT()[i]<< std::endl;
+                std::cout<< "Debug in picongpu/include/picongpu/fields/FieldTmp.hpp/constructor FieldSolverLowerMargin dim "<< i << " : "<< FieldSolverLowerMargin().toRT()[i]<< std::endl;
+                std::cout<< "Debug in picongpu/include/picongpu/fields/FieldTmp.hpp/constructor LowerMargin dim "<< i << " : "<< LowerMargin().toRT()[i]<< std::endl;
+            }
+
+
         /* ------------------ upper margin  -----------------------------------*/
 
         using SpeciesUpperMargin = pmacc::mp_fold<
@@ -120,6 +129,16 @@ namespace picongpu
         using FieldSolverUpperMargin = GetUpperMargin<fields::Solver>::type;
 
         using UpperMargin = pmacc::math::CT::max<SpeciesFieldTmpUpperMargin, FieldSolverUpperMargin>::type;
+
+
+        for(uint32_t i=0; i<simDim; i++)
+            {
+                std::cout<< "Debug in picongpu/include/picongpu/fields/FieldTmp.hpp/constructor SpeciesUpperMargin dim "<< i << " : " <<SpeciesUpperMargin().toRT()[i]<< std::endl;
+                std::cout<< "Debug in picongpu/include/picongpu/fields/FieldTmp.hpp/constructor FieldTmpUpperMargin dim "<< i << " : "<< FieldTmpUpperMargin().toRT()[i]<< std::endl;
+                std::cout<< "Debug in picongpu/include/picongpu/fields/FieldTmp.hpp/constructor FieldSolverUpperMargin dim "<< i << " : "<< FieldSolverUpperMargin().toRT()[i]<< std::endl;
+                std::cout<< "Debug in picongpu/include/picongpu/fields/FieldTmp.hpp/constructor UpperMargin dim "<< i << " : "<< UpperMargin().toRT()[i]<< std::endl;
+            }
+
 
         const DataSpace<simDim> originGuard(LowerMargin().toRT());
         const DataSpace<simDim> endGuard(UpperMargin().toRT());

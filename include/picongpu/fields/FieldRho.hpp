@@ -90,6 +90,12 @@ namespace picongpu
         //! Get the device data box for the field values
         DataBoxType getDeviceDataBox();
 
+        /** Assign the given value to elements
+         *
+         * @param value value to assign all elements to
+         */
+        void assign(ValueType value);
+
         /** Reset the host-device buffer for field values
          *
          * @param currentStep index of time iteration

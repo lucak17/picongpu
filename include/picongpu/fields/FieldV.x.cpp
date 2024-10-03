@@ -140,6 +140,11 @@ namespace picongpu
         return eB;
     }
 
+    void FieldV::assign(FieldV::ValueType value)
+    {
+        buffer->getDeviceBuffer().setValue(value);
+    }
+
     /** Reset the host-device buffer for field values
      *
      * @param currentStep index of time iteration

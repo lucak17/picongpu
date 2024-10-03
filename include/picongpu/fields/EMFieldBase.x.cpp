@@ -174,6 +174,11 @@ namespace picongpu
             return eB;
         }
 
+        void EMFieldBase::assign(EMFieldBase::ValueType value)
+        {
+            buffer->getDeviceBuffer().setValue(value);
+        }
+
         void EMFieldBase::reset(uint32_t)
         {
             buffer->getHostBuffer().reset(true);

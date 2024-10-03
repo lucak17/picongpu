@@ -48,6 +48,7 @@
 #include "picongpu/simulation/control/MovingWindow.hpp"
 #include "picongpu/simulation/stage/AtomicPhysics.hpp"
 #include "picongpu/simulation/stage/Collision.hpp"
+#include "picongpu/simulation/stage/ChargeDeposition.hpp"
 #include "picongpu/simulation/stage/CurrentBackground.hpp"
 #include "picongpu/simulation/stage/CurrentDeposition.hpp"
 #include "picongpu/simulation/stage/CurrentInterpolationAndAdditionToEMF.hpp"
@@ -564,6 +565,7 @@ namespace picongpu
             eventSystem::setTransactionEvent(commEvent);
             (*currentBackground)(currentStep);
             CurrentDeposition{}(currentStep);
+            ChargeDeposition{}(currentStep);
             (*currentInterpolationAndAdditionToEMF)(currentStep, *myFieldSolver);
             myFieldSolver->update_afterCurrent(currentStep);
         }

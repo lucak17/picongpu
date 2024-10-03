@@ -28,6 +28,8 @@
 #include "picongpu/fields/MaxwellSolver/Poisson/Poisson.kernel"
 #include "picongpu/fields/cellType/Yee.hpp"
 #include "picongpu/traits/GetMargin.hpp"
+//#include "include/picongpu/particles/particleToGrid/ComputeFieldValue.hpp"
+
 
 #include <pmacc/dataManagement/ISimulationData.hpp>
 #include <pmacc/types.hpp>
@@ -59,16 +61,26 @@ namespace picongpu
                     fieldV = dc.get<FieldV>(FieldV::getName());
                     //std::cout << "Debug in picongpu/include/picongpu/fields/MaxwellSolver/Poisson/Poisson.hpp/constructor FieldRho name "<< FieldRho::getUniqueId(0) << std::endl;
                     fieldRho = dc.get<FieldRho>(FieldRho::getName());
+                    //fieldTmp = std::make_unique<FieldTmp>(cellDescription, fieldTmpNumSlots+1);
+
                     std::cout << "Debug in picongpu/include/picongpu/fields/MaxwellSolver/Poisson/Poisson.hpp/constructor FieldRho END name "<< FieldRho::getName() << std::endl;
                 }
 
                 void update_beforeCurrent(uint32_t const currentStep)
                 {   
-                    float3_X valueB={1.0,2.0,3.0};
-                    float_X valueRho=2.5;
-                    setFieldBConstantValue<CORE + BORDER>(valueB, currentStep);
-                    setFieldRhoConstantValue<CORE + BORDER>(valueRho, currentStep);
+                    float3_X valueB={1.0,2.0,3.5};
+                    float_X valueRho=1.5;
+                    
+                    fieldB->assign(valueB);
+                    fieldRho->assign(valueRho);
+                    //setFieldBConstantValue<CORE + BORDER>(valueB, currentStep);
+                    //setFieldRhoConstantValue<CORE + BORDER>(valueRho, currentStep);
                     std::cout<< "Debug in include/picongpu/fields/MaxwellSolver/Poisson/Poisson.hpp/update_beforeCurrent step "<< currentStep <<std::endl;
+
+
+
+
+
                 }
 
                 template<uint32_t T_area>
@@ -139,6 +151,7 @@ namespace picongpu
                 std::shared_ptr<FieldB> fieldB;
                 std::shared_ptr<FieldV> fieldV;
                 std::shared_ptr<FieldRho> fieldRho;
+               // std::unique_ptr<FieldTmp> fieldTmp;
             
             
             

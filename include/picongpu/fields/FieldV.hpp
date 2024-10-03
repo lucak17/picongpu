@@ -78,7 +78,6 @@ namespace picongpu
 
         //! Unit type of field components
         using UnitValueType = promoteType<float_64, ValueType>::type;
-
         /** Create a field
          *
          * @param cellDescription mapping for kernels
@@ -109,8 +108,12 @@ namespace picongpu
         /** Start asynchronous communication of field values
          *
          * @param serialEvent event to depend on
-         */
+        */
         EventTask asyncCommunication(EventTask serialEvent);
+
+
+        void assign(ValueType value);
+
 
         /** Reset the host-device buffer for field values
          *
