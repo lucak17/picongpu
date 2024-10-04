@@ -173,6 +173,11 @@ namespace picongpu
         return *buffer;
     }
 
+    GridBuffer<FieldRho::ValueType, simDim>* FieldRho::getGridBufferPointer()
+    {
+        return buffer.get();
+    }
+
     //! Get the grid layout
     GridLayout<simDim> FieldRho::getGridLayout()
     {

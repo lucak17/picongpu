@@ -72,7 +72,7 @@ namespace picongpu
                     float_X valueRho=1.5;
                     
                     fieldB->assign(valueB);
-                    fieldRho->assign(valueRho);
+                    //fieldRho->assign(valueRho);
                     //setFieldBConstantValue<CORE + BORDER>(valueB, currentStep);
                     //setFieldRhoConstantValue<CORE + BORDER>(valueRho, currentStep);
                     std::cout<< "Debug in include/picongpu/fields/MaxwellSolver/Poisson/Poisson.hpp/update_beforeCurrent step "<< currentStep <<std::endl;

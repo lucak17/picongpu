@@ -44,6 +44,7 @@
 
 #include <memory>
 #include <string>
+#include <iostream>
 
 namespace picongpu
 {
@@ -60,6 +61,7 @@ namespace picongpu
     template<uint32_t AREA, class FrameSolver, typename Filter = particles::filter::All, class ParticlesClass>
     inline void computeFieldTmpValue(FieldTmp& fieldTmp, ParticlesClass& parClass, uint32_t const)
     {
+        std::cout<< "Debug in picongpu/include/picongpu/fields/FieldTmpOperations.hpp/computeFieldTmpValue " <<std::endl;
         using BlockArea = SuperCellDescription<
             typename MappingDesc::SuperCellSize,
             typename FrameSolver::LowerMargin,
