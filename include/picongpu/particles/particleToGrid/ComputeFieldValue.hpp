@@ -28,6 +28,7 @@
 #include <pmacc/Environment.hpp>
 
 #include <optional>
+#include <iostream>
 
 
 namespace picongpu
@@ -80,6 +81,7 @@ namespace picongpu
                     uint32_t const& currentStep,
                     uint32_t const& extraSlotNr) const
                 {
+                    std::cout<<  "Debug in include/picongpu/particles/particlesToGrid/ComputeFieldValue.hpp/ () tmp value host before {4,4,4} "<< fieldTmp.getHostDataBox()({4,4,4}) << " Step " << currentStep <<std::endl;
                     using Solver = ComputeGridValuePerFrame<T...>;
                     DataConnector& dc = Environment<>::get().DataConnector();
                     /*load particle without copy particle data to host*/

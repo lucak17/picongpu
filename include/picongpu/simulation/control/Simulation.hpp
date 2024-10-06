@@ -187,7 +187,7 @@ namespace picongpu
         void pluginLoad() override
         {
 
-            std::cout<<"Debug in include/picongpu/simulation/control/Simulation.hpp/pluginLoad" << std::endl;
+            std::cout<<"Debug in include/picongpu/simulation/control/Simulation.hpp/pluginLoad devices.size " << devices.size() << std::endl;
             // fill periodic with 0
             while(periodic.size() < 3)
                 periodic.push_back(0);

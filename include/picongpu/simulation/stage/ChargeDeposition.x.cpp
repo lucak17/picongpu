@@ -28,6 +28,9 @@
 #include "picongpu/particles/particleToGrid/ComputeGridValuePerFrame.def"
 #include "picongpu/particles/particleToGrid/ComputeGridValuePerFrame.hpp"
 #include "picongpu/particles/filter/filter.hpp"
+#include "picongpu/particles/traits/GetShape.hpp"
+#include "picongpu/particles/particleToGrid/FilteredDerivedAttribute.hpp"
+#include "picongpu/particles/particleToGrid/derivedAttributes/DerivedAttributes.def"
 
 
 #include <pmacc/Environment.hpp>
@@ -49,7 +52,7 @@ namespace picongpu
             namespace detail
             {
                 namespace deriveField = picongpu::particles::particleToGrid;
-                template<typename T_SpeciesType>
+                template<typename T_SpeciesType, typename T_Area>
                 struct ChargeDepositionDetail
                 {
                     
@@ -61,12 +64,14 @@ namespace picongpu
                         using SpeciesType = T_SpeciesType;
                         using FilterAll = picongpu::particles::filter::All;
                         using ChargeDensityDerived = deriveField::derivedAttributes::ChargeDensity;
-                        using shapeType = deriveField::detail::GetAttributeShape_t<SpeciesType, ChargeDensityDerived>;
-                        using Solver = deriveField::ComputeGridValuePerFrame<shapeType, ChargeDensityDerived>;  
-    
+                        //using shapeType = deriveField::detail::GetAttributeShape_t<SpeciesType, ChargeDensityDerived>;
+                        using shapeType = typename GetShape<SpeciesType>::type;
+                        using Solver = deriveField::ComputeGridValuePerFrame<shapeType, ChargeDensityDerived>;
+                        //using Solver = deriveField::CreateEligible_t<T_SpeciesType, deriveField::derivedAttributes::ChargeDensity>;  
+                        //using Solver = ChargeDensityDerived;
                         std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail tmp value device before {4,4,4} "<< fieldTmp.getDeviceDataBox()({4,4,4}) << " Step " << currentStep <<std::endl;
                         std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail tmp value host before {4,4,4} "<< fieldTmp.getHostDataBox()({4,4,4}) << " Step " << currentStep <<std::endl;
-                        auto event = deriveField::ComputeFieldValue<CORE + BORDER, Solver, SpeciesType, picongpu::particles::filter::All>()(fieldTmp, currentStep,1u);
+                        auto event = deriveField::ComputeFieldValue<T_Area::value, Solver, SpeciesType, picongpu::particles::filter::All>()(fieldTmp, currentStep,1u);
                         // wait for unfinished asynchronous communication
                         if(event.has_value())
                             eventSystem::setTransactionEvent(*event);
@@ -99,7 +104,7 @@ namespace picongpu
                 using SpeciesWithChargeSolver = typename pmacc::particles::traits::FilterByFlag<VectorAllSpecies, chargeRatio<>>::type;
                 // using SpeciesWithChargeSolver = VectorAllSpecies;
 
-                meta::ForEach<SpeciesWithChargeSolver,picongpu::simulation::stage::detail::ChargeDepositionDetail<boost::mpl::_1>>depositCharge;
+                meta::ForEach<SpeciesWithChargeSolver,picongpu::simulation::stage::detail::ChargeDepositionDetail<boost::mpl::_1, pmacc::mp_int<type::CORE + type::BORDER>>>depositCharge;
 
                 depositCharge(step, fieldTmp, fieldRho, dc);
                 
