@@ -103,7 +103,6 @@ namespace pmacc
             , gridLayout(gridLayout)
             , maxExchange(0)
         {
-            std::cout<< "Debug in include/pmacc/memory/buffers/GridBuffer.hpp/constructor-GridLayout " <<std::endl;
             init();
         }
 
@@ -123,7 +122,6 @@ namespace pmacc
             , gridLayout(dataSpace)
             , maxExchange(0)
         {
-            std::cout<< "Debug in include/pmacc/memory/buffers/GridBuffer.hpp/constructor-DataSpace " <<std::endl;
             init();
         }
 
@@ -277,7 +275,6 @@ namespace pmacc
             uint32_t communicationTag,
             bool sizeOnDevice = false)
         {
-            // std::cout<< "Debug in include/pmacc/memory/buffers/GridBuffer.hpp/addExchange_dataplace " <<std::endl;
             addExchange(dataPlace, receive, guardingCells, communicationTag, sizeOnDevice, sizeOnDevice);
         }
 
