@@ -738,7 +738,6 @@ make sure that environment variable OPENPMD_BP_BACKEND is not set to ADIOS1.
                     /** \todo check if always correct at this point, depends on
                      * solver implementation */
                     const float_X timeOffset = 0.0;
-                    std::cout<< "Debug in picongpu/include/picongpu/plugins/openPMD/openPMDWriter.hpp/GetFields<T_Field> "<< T_Field::getName() << " step " << currentStep <<std::endl;
                     openPMDWriter::writeField<ComponentType>(
                         params,
                         currentStep,
@@ -807,7 +806,6 @@ make sure that environment variable OPENPMD_BP_BACKEND is not set to ADIOS1.
 
                 HINLINE void operator_impl(ThreadParams* params, uint32_t const currentStep)
                 {
-                    std::cout << "Debug in picongpu/include/picongpu/plugins/openPMD/openPMDWriter.hpp/GetFields<T_Field,temp>/operator_impl compute TMP "<< getName() <<" step "<< currentStep << std::endl;
                     params->m_dumpTimes.now<std::chrono::milliseconds>("Begin write field " + getName());
                     DataConnector& dc = Environment<>::get().DataConnector();
 
@@ -853,7 +851,6 @@ make sure that environment variable OPENPMD_BP_BACKEND is not set to ADIOS1.
                     eventSystem::getTransactionEvent().waitForFinished();
                     bool const isDomainBound = traits::IsFieldDomainBound<FieldTmp>::value;
                     /*write data to openPMD Series*/
-                    //std::cout<< "Debug in picongpu/include/picongpu/plugins/openPMD/openPMDWriter.hpp/GetFields<T_Field,temp> "<< getName() << " step " << currentStep <<std::endl;
                     openPMDWriter::template writeField<ComponentType>(
                         params,
                         currentStep,
@@ -1505,7 +1502,6 @@ make sure that environment variable OPENPMD_BP_BACKEND is not set to ADIOS1.
                 bool isDomainBound,
                 bool logBeginWriteField = true)
             {
-                std::cout<< "Debug in picongpu/include/picongpu/plugins/openPMD/openPMDWriter.hpp/writeField "<< name << " step " << currentStep <<std::endl;
                 auto const name_lookup_tpl = plugins::misc::getComponentNames(nComponents);
                 std::optional<std::string> pathToRecordComponentSpecifiedViaMeshName = std::nullopt;
                 if(nComponents == 1)
@@ -1653,7 +1649,6 @@ make sure that environment variable OPENPMD_BP_BACKEND is not set to ADIOS1.
                         }
                     }();
 
-                   // std::cout<< "Debug cycle d="<<d << " path: " << pathToRecordComponent <<  " step " << currentStep <<std::endl;
                     ::openPMD::MeshRecordComponent mrc = mesh[pathToRecordComponent];
                     std::string datasetName = nComponents > 1
                         ? params->openPMDSeries->meshesPath() + name + "/" + name_lookup_tpl[d]
@@ -1773,7 +1768,6 @@ make sure that environment variable OPENPMD_BP_BACKEND is not set to ADIOS1.
 
             void write(ThreadParams* threadParams, uint32_t const currentStep, std::string mpiTransportParams)
             {
-                std::cout<< "Debug in picongpu/include/picongpu/plugins/openPMD/openPMDWriter.hpp/write step "<< currentStep << std::endl;
                 threadParams->m_dumpTimes.now<std::chrono::milliseconds>(
                     "Beginning iteration " + std::to_string(currentStep));
                 const SubGrid<simDim>& subGrid = Environment<simDim>::get().SubGrid();
