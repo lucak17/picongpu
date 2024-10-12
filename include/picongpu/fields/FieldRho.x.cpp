@@ -93,13 +93,6 @@ namespace picongpu
 
         using LowerMargin = pmacc::math::CT::max<SpeciesLowerMargin, FieldSolverLowerMargin>::type;
 
-        for(uint32_t i=0; i<simDim; i++)
-            {
-                std::cout<< "Debug in picongpu/include/picongpu/fields/FieldRho.hpp/constructor SpeciesLowerMargin dim "<< i << " : " <<SpeciesLowerMargin().toRT()[i]<< std::endl;
-                std::cout<< "Debug in picongpu/include/picongpu/fields/FieldRho.hpp/constructor FieldSolverLowerMargin dim "<< i << " : "<< FieldSolverLowerMargin().toRT()[i]<< std::endl;
-                std::cout<< "Debug in picongpu/include/picongpu/fields/FieldRho.hpp/constructor LowerMargin dim "<< i << " : "<< LowerMargin().toRT()[i]<< std::endl;
-            }
-
 
         /* ------------------ upper margin  -----------------------------------*/
 
@@ -108,13 +101,6 @@ namespace picongpu
         using FieldSolverUpperMargin = GetUpperMargin<fields::Solver>::type;
 
         using UpperMargin = pmacc::math::CT::max<SpeciesUpperMargin, FieldSolverUpperMargin>::type;
-
-        for(uint32_t i=0; i<simDim; i++)
-            {
-                std::cout<< "Debug in picongpu/include/picongpu/fields/FieldRho.hpp/constructor SpeciesUpperMargin dim "<< i << " : " <<SpeciesUpperMargin().toRT()[i]<< std::endl;
-                std::cout<< "Debug in picongpu/include/picongpu/fields/FieldRho.hpp/constructor FieldSolverUpperMargin dim "<< i << " : "<< FieldSolverUpperMargin().toRT()[i]<< std::endl;
-                std::cout<< "Debug in picongpu/include/picongpu/fields/FieldRho.hpp/constructor UpperMargin dim "<< i << " : "<< UpperMargin().toRT()[i]<< std::endl;
-            }
 
 
         const DataSpace<simDim> originGuard(LowerMargin().toRT());
