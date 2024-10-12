@@ -100,8 +100,6 @@ namespace picongpu
                 guardingCells[d] = (relativeMask[d] == -1 ? originGuard[d] : endGuard[d]);
             buffer->addExchange(GUARD, i, guardingCells, commTag);
         }
-        std::cout<< "Debug in include/picongpu/fields/FieldV.hpp/constructor END "<<std::endl;
-
     }
 
     
