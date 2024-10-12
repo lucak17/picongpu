@@ -64,7 +64,6 @@ namespace pmacc
     template<unsigned DIM>
     SimulationHelper<DIM>::~SimulationHelper()
     {
-        std::cout << "Debug in include/pmacc/simulationControl/SimulationHelper.hpp/destructor"<< std::endl;
         {
             // notify all concurrent threads to exit
             std::unique_lock<std::mutex> lk(this->concurrentThreadMutex);
@@ -96,7 +95,6 @@ namespace pmacc
     template<unsigned DIM>
     void SimulationHelper<DIM>::dumpOneStep(uint32_t currentStep)
     {
-       // std::cout << "Debug: I am in SimulationHelper<DIM>::dumpOneStep " << currentStep <<  std::endl; 
         /* trigger checkpoint notification */
         if(pluginSystem::containsStep(seqCheckpointPeriod, currentStep))
         {
@@ -112,7 +110,6 @@ namespace pmacc
              * time for checkpointing if some ranks died */
             MPI_CHECK(MPI_Barrier(gc.getCommunicator().getMPIComm()));
             
-            std::cout << "Debug: START dump checkpoint in SimulationHelper<DIM>::dumpOneStep step " << currentStep <<  std::endl;
             /* create directory containing checkpoints  */
             if(numCheckpoints == 0)
             {
@@ -134,8 +131,7 @@ namespace pmacc
             MPI_CHECK(MPI_Barrier(gc.getCommunicator().getMPIComm()));
 
             if(gc.getGlobalRank() == 0)
-            {
-               // std::cout << "Debug: write checkpoint step " << currentStep <<  std::endl; 
+            { 
                 writeCheckpointStep(currentStep);
             }
             numCheckpoints++;
@@ -219,7 +215,6 @@ namespace pmacc
             /* Global offset is updated during the simulation. In case we perform a soft restart we need to reset
              * the offset here to be valid for the next simulation run.
              */
-            std::cout << "Debug in picongpu/include/pmacc/simulationControl/SimulationHelper.hpp/startsimulation_loop softRestarts " << softRestarts <<std::endl;
             Environment<DIM>::get().SubGrid().setGlobalDomainOffset(DataSpace<DIM>::create(0));
             resetAll(0);
             uint32_t currentStep = fillSimulation();
@@ -457,10 +452,8 @@ namespace pmacc
     template<unsigned DIM>
     void SimulationHelper<DIM>::writeCheckpointStep(const uint32_t checkpointStep)
     {
-        std::cout << "Debug: END dump checkpoint in SimulationHelper<DIM>::writeCheckpointStep step " << checkpointStep <<  std::endl;
         std::ofstream file;
         const std::string checkpointMasterFile = checkpointDirectory + std::string("/") + CHECKPOINT_MASTER_FILE;
-        // td::cout << "Debug: checkpoint master file " << checkpointMasterFile <<  std::endl;
         file.open(checkpointMasterFile.c_str(), std::ofstream::app);
 
         if(!file)

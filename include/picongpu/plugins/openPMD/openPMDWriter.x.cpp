@@ -1157,7 +1157,7 @@ make sure that environment variable OPENPMD_BP_BACKEND is not set to ADIOS1.
                 mThreadParams.initFromConfig(*m_help, m_id, currentStep, outputDirectory);
 
                 mThreadParams.isCheckpoint = false;
-                std::cout << "Debug START dump data in include/picongpu/plugins/openPMD/openPMDWriter.hpp/notify step "<< currentStep << std::endl;
+                //std::cout << "Debug START dump data in include/picongpu/plugins/openPMD/openPMDWriter.hpp/notify step "<< currentStep << std::endl;
                 dumpData(currentStep);
             }
 
@@ -1191,7 +1191,7 @@ make sure that environment variable OPENPMD_BP_BACKEND is not set to ADIOS1.
                 mThreadParams.initFromConfig(*m_help, m_id, currentStep, checkpointDirectory, checkpointFilename);
 
                 mThreadParams.window = MovingWindow::getInstance().getDomainAsWindow(currentStep);
-                std::cout << "Debug START dump checkpoint in include/picongpu/plugins/openPMD/openPMDWriter.hpp/dumpCheckpoint step "<< currentStep << std::endl;
+                //std::cout << "Debug START dump checkpoint in include/picongpu/plugins/openPMD/openPMDWriter.hpp/dumpCheckpoint step "<< currentStep << std::endl;
                 dumpData(currentStep);
             }
 
@@ -1414,7 +1414,7 @@ make sure that environment variable OPENPMD_BP_BACKEND is not set to ADIOS1.
                 write(&mThreadParams, currentStep, mpiTransportParams);
 
                 endWrite();
-                std::cout << "Debug END dump data in include/picongpu/plugins/openPMD/openPMDWriter.hpp/dumpData step "<< currentStep << std::endl;
+                //std::cout << "Debug END dump data in include/picongpu/plugins/openPMD/openPMDWriter.hpp/dumpData step "<< currentStep << std::endl;
                 timer.toggleEnd();
                 double interval = timer.getInterval();
                 mThreadParams.times.push_back(interval);

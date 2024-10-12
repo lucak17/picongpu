@@ -59,11 +59,7 @@ namespace picongpu
                     fieldE = dc.get<FieldE>(FieldE::getName());
                     fieldB = dc.get<FieldB>(FieldB::getName());
                     fieldV = dc.get<FieldV>(FieldV::getName());
-                    //std::cout << "Debug in picongpu/include/picongpu/fields/MaxwellSolver/Poisson/Poisson.hpp/constructor FieldRho name "<< FieldRho::getUniqueId(0) << std::endl;
                     fieldRho = dc.get<FieldRho>(FieldRho::getName());
-                    //fieldTmp = std::make_unique<FieldTmp>(cellDescription, fieldTmpNumSlots+1);
-
-                    std::cout << "Debug in picongpu/include/picongpu/fields/MaxwellSolver/Poisson/Poisson.hpp/constructor FieldRho END name "<< FieldRho::getName() << std::endl;
                 }
 
                 void update_beforeCurrent(uint32_t const currentStep)
@@ -75,12 +71,7 @@ namespace picongpu
                     //fieldRho->assign(valueRho);
                     //setFieldBConstantValue<CORE + BORDER>(valueB, currentStep);
                     //setFieldRhoConstantValue<CORE + BORDER>(valueRho, currentStep);
-                    std::cout<< "Debug in include/picongpu/fields/MaxwellSolver/Poisson/Poisson.hpp/update_beforeCurrent step "<< currentStep <<std::endl;
-
-
-
-
-
+                    //std::cout<< "Debug in include/picongpu/fields/MaxwellSolver/Poisson/Poisson.hpp/update_beforeCurrent step "<< currentStep <<std::endl;
                 }
 
                 template<uint32_t T_area>

@@ -98,8 +98,6 @@ namespace picongpu
                 meta::ForEach<SpeciesWithChargeSolver,picongpu::simulation::stage::detail::ChargeDepositionDetail<boost::mpl::_1, pmacc::mp_int<type::CORE + type::BORDER>>>depositCharge;
 
                 depositCharge(currentStep, fieldTmp, fieldRho, dc);
-                
-                std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp END step "<< currentStep <<std::endl;
             }
         } // namespace stage
     } // namespace simulation

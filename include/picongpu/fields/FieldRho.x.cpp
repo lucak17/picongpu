@@ -24,7 +24,6 @@
 
 #include "picongpu/simulation_defines.hpp"
 
-#include "picongpu/fields/FieldRho.kernel"
 #include "picongpu/fields/MaxwellSolver/Solvers.hpp"
 #include "picongpu/param/fileOutput.param"
 #include "picongpu/particles/filter/filter.hpp"

@@ -55,7 +55,7 @@ int runSimulation(int argc, char** argv)
         errorCode = EXIT_FAILURE;
         break;
     case ArgsParser::Status::success:
-        std::cout << "Debug branch lucap/test1 " << std::endl;
+        //std::cout << "Debug branch lucap/test1 " << std::endl;
         sim.load();
         sim.start();
         sim.unload();

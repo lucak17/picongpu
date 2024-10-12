@@ -788,7 +788,7 @@ namespace picongpu
             dataConnector.consume(std::move(fieldRho));
           
             for(uint32_t slot = 0; slot < fieldTmpNumSlots  ; ++slot)
-            {   std::cout << "Field tmp "<< slot << std::endl;
+            {
                 auto fieldTmp = std::make_unique<FieldTmp>(*cellDescription, slot);
                 dataConnector.consume(std::move(fieldTmp));
             }
