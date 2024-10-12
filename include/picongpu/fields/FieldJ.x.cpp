@@ -61,14 +61,7 @@ namespace picongpu
         , buffer(cellDescription.getGridLayout())
         , fieldJrecv(nullptr)
     {
-        std::cout<< "Debug in include/picongpu/fields/FieldJ.hpp/constructor START"<<std::endl;
         const DataSpace<simDim> coreBorderSize = cellDescription.getGridLayout().sizeWithoutGuardND();
-       // std::cout<< "Debug in include/picongpu/fields/FieldJ.hpp/constructor coreBorderSize"<<std::endl;
-        for(uint32_t i=0; i<simDim; i++)
-        {
-            std::cout<< "Debug in include/picongpu/fields/FieldJ.hpp/constructor coreBorderSize dim "<< i << " : " << coreBorderSize[i]<< std::endl;
-        }
-
         /* cell margins the current might spread to due to particle shapes */
         using AllSpeciesWithCurrent =
             typename pmacc::particles::traits::FilterByFlag<VectorAllSpecies, current<>>::type;
@@ -78,12 +71,6 @@ namespace picongpu
         using UpperMarginShapes = pmacc::
             mp_fold<AllSpeciesWithCurrent, typename pmacc::math::CT::make_Int<simDim, 0>::type, UpperMarginShapesOp>;
 
-        for(uint32_t i=0; i<simDim; i++)
-        {
-            std::cout<< "Debug in include/picongpu/fields/FieldJ.hpp/constructor current solver lowerMargin dim "<< i << " : " <<LowerMarginShapes::toRT()[i]<< std::endl;
-            std::cout<< "Debug in include/picongpu/fields/FieldJ.hpp/constructor current solver upperMargin dim "<< i << " : "<< UpperMarginShapes::toRT()[i]<< std::endl;
-        }
-
         /* margins are always positive, also for lower margins
          * additional current interpolations and current filters on FieldJ might
          * spread the dependencies on neighboring cells
@@ -92,27 +79,11 @@ namespace picongpu
         auto const interpolationLowerMargin = interpolation.getLowerMargin();
         auto const interpolationUpperMargin = interpolation.getUpperMargin();
         
-        for(uint32_t i=0; i<simDim; i++)
-        {
-            std::cout<< "Debug in include/picongpu/fields/FieldJ.hpp/constructor interpolation lowerMargin dim "<< i << " : " <<interpolationLowerMargin[i]<< std::endl;
-            std::cout<< "Debug in include/picongpu/fields/FieldJ.hpp/constructor interpolation upperMargin dim "<< i << " : "<< interpolationUpperMargin[i]<< std::endl;
-        }
-
-
         auto const originGuard = math::max(LowerMarginShapes::toRT(), interpolationLowerMargin);
         auto const endGuard = math::max(UpperMarginShapes::toRT(), interpolationUpperMargin);
 
-        for(uint32_t i=0; i<simDim; i++)
-        {
-            std::cout<< "Debug in include/picongpu/fields/FieldJ.hpp/constructor overall lowerMargin dim "<< i << " : " <<originGuard[i]<< std::endl;
-            std::cout<< "Debug in include/picongpu/fields/FieldJ.hpp/constructor overall upperMargin dim "<< i << " : "<< endGuard[i]<< std::endl;
-        }
-
-
         // Type to generate a unique send tag from
         auto const sendCommTag = pmacc::traits::getUniqueId<uint32_t>();
-
-        std::cout << "Debug in include/picongpu/fields/FieldJ.hpp/constructor NumberOfExchanges<simDim>::value " << NumberOfExchanges<simDim>::value <<std::endl;
 
         /*go over all directions*/
         for(uint32_t i = 1; i < NumberOfExchanges<simDim>::value; ++i)
