@@ -81,7 +81,7 @@ namespace picongpu
                     uint32_t const& currentStep,
                     uint32_t const& extraSlotNr) const
                 {
-                    std::cout<<  "Debug in include/picongpu/particles/particlesToGrid/ComputeFieldValue.hpp/ () tmp value host before {4,4,4} "<< fieldTmp.getHostDataBox()({4,4,4}) << " Step " << currentStep <<std::endl;
+                    std::cout<<  "Debug in include/picongpu/particles/particlesToGrid/ComputeFieldValue.hpp/ tmp value host before {24,32,48} "<< fieldTmp.getHostDataBox()({24,32,48}) << " Step " << currentStep <<std::endl;
                     using Solver = ComputeGridValuePerFrame<T...>;
                     DataConnector& dc = Environment<>::get().DataConnector();
                     /*load particle without copy particle data to host*/
@@ -90,6 +90,7 @@ namespace picongpu
                     fieldTmp.getGridBuffer().getDeviceBuffer().setValue(FieldTmp::ValueType::create(0.0));
                     /*run algorithm*/
                     computeFieldTmpValue<AREA, Solver, T_Filter>(fieldTmp, *speciesTmp, currentStep);
+                    std::cout<<  "Debug in include/picongpu/particles/particlesToGrid/ComputeFieldValue.hpp/ tmp value host after {24,32,48} "<< fieldTmp.getHostDataBox()({24,32,48}) << " Step " << currentStep <<std::endl;
                     // Particles can contribute to cells in GUARD (due to their shape) this values need to be
                     //  added to the neighbouring GPU BOARDERs.
                     return fieldTmp.asyncCommunication(eventSystem::getTransactionEvent());

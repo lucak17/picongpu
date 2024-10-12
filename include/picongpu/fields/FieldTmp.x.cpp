@@ -256,10 +256,10 @@ namespace picongpu
         return *fieldTmp;
     }
 
-    GridBuffer<typename FieldTmp::ValueType, simDim>* FieldTmp::getGridBufferPointer()
-    {
-        return fieldTmp.get();
-    }
+   // GridBuffer<typename FieldTmp::ValueType, simDim>* FieldTmp::getGridBufferPointer()
+    //{
+    //   return fieldTmp.get();
+    //}
 
     GridLayout<simDim> FieldTmp::getGridLayout()
     {

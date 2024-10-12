@@ -81,8 +81,12 @@ namespace picongpu
         //! Get a reference to the host-device buffer for the field values
         GridBuffer<ValueType, simDim>& getGridBuffer();
 
-        GridBuffer<ValueType, simDim>* getGridBufferPointer();
-
+        //GridBuffer<ValueType, simDim>* getGridBufferPointer();
+        std::unique_ptr<FieldRho::Buffer>* getGridBufferPointer()
+        {
+            std::unique_ptr<FieldRho::Buffer>* tmp = &(this->buffer);
+            return tmp;
+        }
         //! Get the grid layout
         GridLayout<simDim> getGridLayout();
 

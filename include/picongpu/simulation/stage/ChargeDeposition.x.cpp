@@ -1,4 +1,4 @@
-/* Copyright 2013-2024 Luca Pennati
+/* Copyright 2024 Luca Pennati
  *
  * This file is part of PIConGPU.
  *
@@ -24,6 +24,7 @@
 
 #include "picongpu/fields/FieldTmp.hpp"
 #include "picongpu/fields/FieldRho.hpp"
+#include "picongpu/fields/FieldRhoOperations.hpp"
 #include "picongpu/particles/particleToGrid/ComputeFieldValue.hpp"
 #include "picongpu/particles/particleToGrid/ComputeGridValuePerFrame.def"
 #include "picongpu/particles/particleToGrid/ComputeGridValuePerFrame.hpp"
@@ -56,41 +57,38 @@ namespace picongpu
                 struct ChargeDepositionDetail
                 {
                     
-                    /** Compute current density created by a species in an area */
+                    /** Compute charge density created by a species in an area */
                     HINLINE void operator()(const uint32_t currentStep, FieldTmp& fieldTmp, FieldRho& fieldRho, pmacc::DataConnector& dc)
                     {
-                        //auto species = dc.get<SpeciesType>(FrameType::getName());
-
                         using SpeciesType = T_SpeciesType;
                         using FilterAll = picongpu::particles::filter::All;
                         using ChargeDensityDerived = deriveField::derivedAttributes::ChargeDensity;
-                        //using shapeType = deriveField::detail::GetAttributeShape_t<SpeciesType, ChargeDensityDerived>;
                         using shapeType = typename GetShape<SpeciesType>::type;
                         using Solver = deriveField::ComputeGridValuePerFrame<shapeType, ChargeDensityDerived>;
-                        //using Solver = deriveField::CreateEligible_t<T_SpeciesType, deriveField::derivedAttributes::ChargeDensity>;  
-                        //using Solver = ChargeDensityDerived;
-                        std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail tmp value device before {4,4,4} "<< fieldTmp.getDeviceDataBox()({4,4,4}) << " Step " << currentStep <<std::endl;
-                        std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail tmp value host before {4,4,4} "<< fieldTmp.getHostDataBox()({4,4,4}) << " Step " << currentStep <<std::endl;
-                        auto event = deriveField::ComputeFieldValue<T_Area::value, Solver, SpeciesType, picongpu::particles::filter::All>()(fieldTmp, currentStep,1u);
+                        
+                        //std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail START charge species "<< SpeciesType::FrameType::getName() << " step " << currentStep <<std::endl;
+                        //std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail tmp value device before {24,32,48} "<< fieldTmp.getDeviceDataBox()({24,32,48}) << " Step " << currentStep <<std::endl;
+                        //std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail tmp value host before {24,32,48} "<< fieldTmp.getHostDataBox()({24,32,48}) << " Step " << currentStep <<std::endl;
+                        auto event = deriveField::ComputeFieldValue<CORE+BORDER, Solver, SpeciesType, picongpu::particles::filter::All>()(fieldTmp, currentStep,1u);
                         // wait for unfinished asynchronous communication
                         if(event.has_value())
                             eventSystem::setTransactionEvent(*event);
-                        /* copy data to host that we can write same to disk*/
+
+                        // add charge density fo FieldRho
+                        modifyFieldRhoByField<CORE + BORDER, pmacc::math::operation::Add>(fieldRho, fieldRho.getCellDescription(), fieldTmp);
+                        /* copy data to host that we can write same to disk probably useless*/
                         fieldTmp.getGridBuffer().deviceToHost();
+                        fieldRho.getGridBuffer().deviceToHost();
                         /*## finish update field ##*/
-                        std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail tmp value device after {4,4,4} "<< fieldTmp.getDeviceDataBox()({4,4,4}) << " Step " << currentStep <<std::endl;
-                        std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail tmp value host after {4,4,4} "<< fieldTmp.getHostDataBox()({4,4,4}) << " Step " << currentStep <<std::endl;
-                        std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail "<< currentStep <<std::endl;
-
-                        
-//                        std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail swap step "<< currentStep <<std::endl;
-
+                        //std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail tmp value device after {24,32,48} "<< fieldTmp.getDeviceDataBox()({24,32,48}) << " Step " << currentStep <<std::endl;
+                        //std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail tmp value host after {24,32,48} "<< fieldTmp.getHostDataBox()({24,32,48}) << " Step " << currentStep <<std::endl;
+                        //std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail END "<< currentStep <<std::endl;
                     }
                 };
 
             } // namespace detail
 
-            void ChargeDeposition::operator()(uint32_t const step) const
+            void ChargeDeposition::operator()(uint32_t const currentStep) const
             {
                 using namespace pmacc;
                 //using namespace particles::particleToGrid;
@@ -102,18 +100,19 @@ namespace picongpu
                 fieldRho.assign(zeroRho);
 
                 using SpeciesWithChargeSolver = typename pmacc::particles::traits::FilterByFlag<VectorAllSpecies, chargeRatio<>>::type;
-                // using SpeciesWithChargeSolver = VectorAllSpecies;
-
+                
                 meta::ForEach<SpeciesWithChargeSolver,picongpu::simulation::stage::detail::ChargeDepositionDetail<boost::mpl::_1, pmacc::mp_int<type::CORE + type::BORDER>>>depositCharge;
 
-                depositCharge(step, fieldTmp, fieldRho, dc);
+                depositCharge(currentStep, fieldTmp, fieldRho, dc);
                 
-                auto* ptrTmp=fieldTmp.getGridBufferPointer();
-                auto* ptrRho=fieldRho.getGridBufferPointer();
-                //std::swap(fieldTmp.getGridBufferPointer(), fieldRho.getGridBufferPointer() );
-                std::swap(ptrTmp, ptrRho);
-
-                std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp step "<< step <<std::endl;
+                //auto* ptrTmp=fieldTmp.getGridBufferPointer();
+                //auto* ptrRho=fieldRho.getGridBufferPointer();
+                // std::swap(*ptrTmp, *ptrRho);
+                //std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail tmp value device after {24,32,48} "<< fieldTmp.getDeviceDataBox()({24,32,48}) << " Step " << currentStep <<std::endl;
+                //std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail tmp value host after {24,32,48} "<< fieldTmp.getHostDataBox()({24,32,48}) << " Step " << currentStep <<std::endl;
+                //std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail Rho value device after {24,32,48} "<< fieldRho.getDeviceDataBox()({24,32,48}) << " Step " << currentStep <<std::endl;
+                //std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail Rho value host after {24,32,48} "<< fieldRho.getHostDataBox()({24,32,48}) << " Step " << currentStep <<std::endl;
+                std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp END step "<< currentStep <<std::endl;
             }
         } // namespace stage
     } // namespace simulation

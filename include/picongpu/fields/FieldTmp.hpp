@@ -55,6 +55,8 @@ namespace picongpu
         //! Type of each field value
         using ValueType = float1_X;
 
+        using Buffer = GridBuffer<ValueType, simDim>;
+
         //! Unit type of field components
         using UnitValueType = promoteType<float_64, ValueType>::type;
 
@@ -77,7 +79,13 @@ namespace picongpu
         //! Get a reference to the host-device buffer for the field values
         GridBuffer<ValueType, simDim>& getGridBuffer();
 
-        GridBuffer<ValueType, simDim>* getGridBufferPointer();
+        //GridBuffer<ValueType, simDim>* getGridBufferPointer();
+
+        std::unique_ptr<Buffer>* getGridBufferPointer()
+        {
+            std::unique_ptr<Buffer>* tmp = &(this->fieldTmp);
+            return tmp;
+        }
 
         //! Get the grid layout
         GridLayout<simDim> getGridLayout();
