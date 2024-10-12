@@ -43,7 +43,6 @@ namespace picongpu
             traits::GetLowerMargin<fields::Solver, FieldB>::type::toRT(),
             traits::GetUpperMargin<fields::Solver, FieldB>::type::toRT())
     {
-        std::cout<< "Debug in include/picongpu/fields/FieldB.hpp/constructor END"<<std::endl;
     }
 
     FieldB::UnitValueType FieldB::getUnit()
