@@ -66,19 +66,7 @@ namespace picongpu
             , id(id)
         {
             // lowerMargin and upperMargin are defined by derivatives employed by the fieldSolver (fieldSolver --> curl --> forward and backwards derivatives)
-            std::cout<< "Debug in include/picongpu/fields/EMFieldbase.hpp/constructor START"<<std::endl;
-            //std::cout<< "Debug in include/picongpu/fields/EMFieldbase.hpp/constructor derivative margins"<<std::endl;
-            for(uint32_t i=0; i<simDim; i++)
-            {   
-                //std::cout<< "Debug in include/picongpu/fields/EMFieldbase.hpp/constructor gridLayout dim "<< i << " : " << cellDescription.getGridLayout()[i]<< std::endl;
-                std::cout<< "Debug in include/picongpu/fields/EMFieldbase.hpp/constructor derivative LowerMargin dim "<< i << " : " << lowerMargin[i]<< std::endl;
-                std::cout<< "Debug in include/picongpu/fields/EMFieldbase.hpp/constructor derivative UpperMargin dim "<< i << " : " << upperMargin[i]<< std::endl;
-            }
-            std::cout<< "Debug in include/picongpu/fields/EMFieldbase.hpp/constructor gridLayout.sizeWithoutGuardND() "<< cellDescription.getGridLayout().sizeWithoutGuardND() <<std::endl;
-            std::cout<< "Debug in include/picongpu/fields/EMFieldbase.hpp/constructor gridLayout.sizeND() "<< cellDescription.getGridLayout().sizeND() <<std::endl;
-            
             buffer = std::make_unique<Buffer>(cellDescription.getGridLayout());
-            std::cout<< "Debug in include/picongpu/fields/EMFieldbase.hpp/constructor BUFFER END"<<std::endl;
 
             using VectorSpeciesWithInterpolation =
                 typename pmacc::particles::traits::FilterByFlag<VectorAllSpecies, interpolation<>>::type;
@@ -104,26 +92,12 @@ namespace picongpu
             using UpperMargin
                 = pmacc::mp_fold<VectorSpeciesWithPusherAndInterpolation, UpperMarginInterpolation, UpperMarginOp>;
 
-           // std::cout<< "Debug in picongpu/include/picongpu/fields/EMFieldBase.hpp/constructor lower upper margin interpolation "<<std::endl;
-            for(uint32_t i=0; i<simDim; i++)
-            {
-                std::cout<< "Debug in picongpu/include/picongpu/fields/EMFieldBase.hpp/constructor particle interpolation lowerMargin dim "<< i << " : " <<LowerMargin().toRT()[i]<< std::endl;
-                std::cout<< "Debug in picongpu/include/picongpu/fields/EMFieldBase.hpp/constructor particle interpolation upperMargin dim "<< i << " : "<< UpperMargin().toRT()[i]<< std::endl;
-            }
             // compute overall Lower and upper margins  
             auto const originGuard = pmacc::math::max(LowerMargin().toRT(), lowerMargin);
             auto const endGuard = pmacc::math::max(UpperMargin().toRT(), upperMargin);
 
-            //std::cout<< "Debug in picongpu/include/picongpu/fields/EMFieldBase.hpp/constructor overall guards "<<std::endl;
-            for(uint32_t i=0; i<simDim; i++)
-            {
-                std::cout<< "Debug in picongpu/include/picongpu/fields/EMFieldBase.hpp/constructor overall guards lowerMargin dim "<< i << " : " <<originGuard[i]<< std::endl;
-                std::cout<< "Debug in picongpu/include/picongpu/fields/EMFieldBase.hpp/constructor overall guards upperMargin dim "<< i << " : "<< endGuard[i]<< std::endl;
-            }
-
-
+            
             auto const commTag = pmacc::traits::getUniqueId<uint32_t>();
-            std::cout << "Debug in include/picongpu/fields/EMFieldBase.hpp/constructor NumberOfExchanges<simDim>::value " << NumberOfExchanges<simDim>::value <<std::endl;
             /*go over all directions*/
             for(uint32_t i = 1; i < NumberOfExchanges<simDim>::value; ++i)
             {
@@ -137,12 +111,6 @@ namespace picongpu
                 for(uint32_t d = 0; d < simDim; ++d)
                 {
                     guardingCells[d] = (relativeMask[d] == -1 ? originGuard[d] : endGuard[d]);
-                   // if (i==19)
-                   // {
-                   //     std::cout<< " Debug in include/picongpu/fields/EMFieldBase.hpp/constructor guarding cells dim "<< d << " relativeMask "<< relativeMask[d] <<std::endl;
-                   //     std::cout<< " Debug in include/picongpu/fields/EMFieldBase.hpp/constructor guarding cells dim "<< d << " guardingCells "<< guardingCells[d] <<std::endl;
-                   // }
-                   // std::cout<< " Debug in include/picongpu/fields/EMFieldBase.hpp/constructor addExchange exchangeNum "<< i  << " dim "<< d << " guardingCells "<< guardingCells[d] <<std::endl;
                 }
                 buffer->addExchange(GUARD, i, guardingCells, commTag);
             }
