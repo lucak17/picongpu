@@ -66,9 +66,6 @@ namespace picongpu
                         using shapeType = typename GetShape<SpeciesType>::type;
                         using Solver = deriveField::ComputeGridValuePerFrame<shapeType, ChargeDensityDerived>;
                         
-                        //std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail START charge species "<< SpeciesType::FrameType::getName() << " step " << currentStep <<std::endl;
-                        //std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail tmp value device before {24,32,48} "<< fieldTmp.getDeviceDataBox()({24,32,48}) << " Step " << currentStep <<std::endl;
-                        //std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail tmp value host before {24,32,48} "<< fieldTmp.getHostDataBox()({24,32,48}) << " Step " << currentStep <<std::endl;
                         auto event = deriveField::ComputeFieldValue<CORE+BORDER, Solver, SpeciesType, picongpu::particles::filter::All>()(fieldTmp, currentStep,1u);
                         // wait for unfinished asynchronous communication
                         if(event.has_value())
@@ -80,9 +77,6 @@ namespace picongpu
                         fieldTmp.getGridBuffer().deviceToHost();
                         fieldRho.getGridBuffer().deviceToHost();
                         /*## finish update field ##*/
-                        //std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail tmp value device after {24,32,48} "<< fieldTmp.getDeviceDataBox()({24,32,48}) << " Step " << currentStep <<std::endl;
-                        //std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail tmp value host after {24,32,48} "<< fieldTmp.getHostDataBox()({24,32,48}) << " Step " << currentStep <<std::endl;
-                        //std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail END "<< currentStep <<std::endl;
                     }
                 };
 
@@ -105,13 +99,6 @@ namespace picongpu
 
                 depositCharge(currentStep, fieldTmp, fieldRho, dc);
                 
-                //auto* ptrTmp=fieldTmp.getGridBufferPointer();
-                //auto* ptrRho=fieldRho.getGridBufferPointer();
-                // std::swap(*ptrTmp, *ptrRho);
-                //std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail tmp value device after {24,32,48} "<< fieldTmp.getDeviceDataBox()({24,32,48}) << " Step " << currentStep <<std::endl;
-                //std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail tmp value host after {24,32,48} "<< fieldTmp.getHostDataBox()({24,32,48}) << " Step " << currentStep <<std::endl;
-                //std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail Rho value device after {24,32,48} "<< fieldRho.getDeviceDataBox()({24,32,48}) << " Step " << currentStep <<std::endl;
-                //std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp/detail Rho value host after {24,32,48} "<< fieldRho.getHostDataBox()({24,32,48}) << " Step " << currentStep <<std::endl;
                 std::cout<<  "Debug in include/picongpu/simulation/stage/ChargeDeposition.hpp END step "<< currentStep <<std::endl;
             }
         } // namespace stage
