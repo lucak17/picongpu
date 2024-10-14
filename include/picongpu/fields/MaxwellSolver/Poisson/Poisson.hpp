@@ -68,10 +68,18 @@ namespace picongpu
                     float_X valueRho=1.5;
                     
                     fieldB->assign(valueB);
+
+                    GridController<simDim>& gc = pmacc::Environment<simDim>::get().GridController();
+                    const SubGrid<simDim>& subGrid = pmacc::Environment<simDim>::get().SubGrid();
                     //fieldRho->assign(valueRho);
                     //setFieldBConstantValue<CORE + BORDER>(valueB, currentStep);
                     //setFieldRhoConstantValue<CORE + BORDER>(valueRho, currentStep);
                     //std::cout<< "Debug in include/picongpu/fields/MaxwellSolver/Poisson/Poisson.hpp/update_beforeCurrent step "<< currentStep <<std::endl;
+                }
+
+                void SetBCs(GridController<simDim>& gc)
+                {
+
                 }
 
                 template<uint32_t T_area>
