@@ -55,7 +55,7 @@ namespace picongpu
 
                 Poisson(MappingDesc const cellDescription):cellDescription(cellDescription)
                 {
-                    DataConnector& dc = Environment<>::get().DataConnector();
+                    DataConnector& dc = Environment<simDim>::get().DataConnector();
                     fieldE = dc.get<FieldE>(FieldE::getName());
                     fieldB = dc.get<FieldB>(FieldB::getName());
                     fieldV = dc.get<FieldV>(FieldV::getName());
@@ -67,20 +67,49 @@ namespace picongpu
                     float3_X valueB={1.0,2.0,3.5};
                     float_X valueRho=1.5;
                     
-                    fieldB->assign(valueB);
+                    fieldB->assign(externalB0value);
 
                     GridController<simDim>& gc = pmacc::Environment<simDim>::get().GridController();
-                    const SubGrid<simDim>& subGrid = pmacc::Environment<simDim>::get().SubGrid();
+                    SubGrid<simDim>& subGrid = pmacc::Environment<simDim>::get().SubGrid();
+                    const DataSpace<simDim> gpuNodes = gc.getGpuNodes();
+                    const DataSpace<simDim> localGpu = gc.getPosition();
+                    std::cout<< "Debug in Poisson.hpp local position "<< localGpu << " domain " << subGrid.getLocalDomain().size << " offset " << subGrid.getLocalDomain().offset <<std::endl;
                     //fieldRho->assign(valueRho);
                     //setFieldBConstantValue<CORE + BORDER>(valueB, currentStep);
                     //setFieldRhoConstantValue<CORE + BORDER>(valueRho, currentStep);
                     //std::cout<< "Debug in include/picongpu/fields/MaxwellSolver/Poisson/Poisson.hpp/update_beforeCurrent step "<< currentStep <<std::endl;
+                    for(uint32_t i=0; i< simDim; i++)
+                    {
+                        if(localGpu[i] == 0 )
+                            SetBCs(gc,i,-1);
+                        if (localGpu[i] == gpuNodes[i] - 1)
+                            SetBCs(gc,i,1);
+                    }
                 }
 
-                void SetBCs(GridController<simDim>& gc)
+                void SetBCs(GridController<simDim>& gc, uint32_t axes, int direction)
                 {
-
+                    if (axes == 0)
+                        SetBCsX(gc, direction);
+                    else if(axes == 1)
+                        SetBCsY(gc, direction);
+                    else if (axes == 2)
+                        SetBCsZ(gc, direction);
                 }
+
+                void SetBCsX(GridController<simDim>& gc, int direction)
+                {
+                    std::cout<<"Debug in Poisson.hpp/SetBCsX dir " << direction << " localGpu "<< gc.getPosition() <<std::endl;
+                }
+                void SetBCsY(GridController<simDim>& gc, int direction)
+                {
+                    std::cout<<"Debug in Poisson.hpp/SetBCsY dir " << direction << " localGpu "<< gc.getPosition() <<std::endl;
+                }
+                void SetBCsZ(GridController<simDim>& gc, int direction)
+                {
+                    std::cout<<"Debug in Poisson.hpp/SetBCsZ dir " << direction << " localGpu "<< gc.getPosition() <<std::endl;
+                }
+
 
                 template<uint32_t T_area>
                 void addCurrent()
