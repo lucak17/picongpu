@@ -64,8 +64,8 @@ namespace picongpu
 
                 void update_beforeCurrent(uint32_t const currentStep)
                 {   
-                    float3_X valueB={1.0,2.0,3.5};
-                    float_X valueRho=1.5;
+                    //float3_X valueB={1.0,2.0,3.5};
+                    //float_X valueRho=1.5;
                     
                     fieldB->assign(externalB0value);
 
