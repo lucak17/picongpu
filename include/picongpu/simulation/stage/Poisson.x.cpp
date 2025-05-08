@@ -25,6 +25,7 @@
 #include "picongpu/fields/FieldTmpOperations.hpp"
 #include "picongpu/fields/currentDeposition/Deposit.hpp"
 #include "picongpu/fields/poissonSolver/BoundaryConditions.hpp"
+#include "picongpu/fields/poissonSolver/SyntheticTest.hpp"
 #include "picongpu/fields/poissonSolver/RightHandSideNormalization.hpp"
 #include "picongpu/fields/poissonSolver/Stencil.hpp"
 #include "picongpu/particles/filter/filter.hpp"
@@ -257,9 +258,14 @@ namespace picongpu
                 EventTask fieldTmpEvent = fieldRho.asyncCommunication(eventSystem::getTransactionEvent());
                 eventSystem::setTransactionEvent(fieldTmpEvent);
 
+                // set synthetic rhs for test
+                auto setSyntheticRHS = fields::poissonSolver::SetSyntheticRHS{};
+                setSyntheticRHS(fieldRho, m_mappingDesc);
+
                 auto boundaryConditionsDirichlet = fields::poissonSolver::BoundaryConditionsDirichlet{};
                 boundaryConditionsDirichlet(*fieldV.get(), m_mappingDesc);
 
+                // adjust right hand side with Dirichlet BCs
                 auto rightHandSideNormalization = fields::poissonSolver::RightHandSideNormalization{};
                 rightHandSideNormalization(*fieldV.get(), fieldRho, m_mappingDesc);
 
@@ -275,10 +281,13 @@ namespace picongpu
                 }
                 // recalculate rho
                 fieldRho.getGridBuffer().getDeviceBuffer().setValue(FieldTmp::ValueType(0.0));
+                setSyntheticRHS(fieldRho, m_mappingDesc);
+#if 0                
                 computeChargeDensity(fieldRho, currentStep);
+#endif
                 /* add results of all species that are still in GUARD to next GPUs BORDER */
                 eventSystem::setTransactionEvent(fieldRho.asyncCommunication(eventSystem::getTransactionEvent()));
-
+                
                 // normalize rho
                 auto coreBorderMapper = makeAreaMapper<CORE + BORDER>(m_mappingDesc);
                 {
@@ -345,6 +354,11 @@ namespace picongpu
 
                 constexpr int maxIterations = 2000;
                 constexpr float_64 epsilon = 1e-8;
+                bool converged = false;
+
+                float_64 totalSum1;
+                float_64 totalSum2;
+
                 for(int i = 0; i < maxIterations; ++i)
                 {
                     // preconditioner
@@ -363,7 +377,6 @@ namespace picongpu
                                 mpkBox);
                     }
 
-                    float_64 totalSum1;
                     /* local p = rw */
                     {
                         auto r0Box = r0Buffer->getDeviceBuffer().getDataBox();
@@ -425,7 +438,6 @@ namespace picongpu
                         totalSum1 = reduceGlobal(coreBorderSize, fieldTransform);
                     }
 
-                    float_64 totalSum2;
                     /* totalSum1 = azk * azk */
                     {
                         auto azkBox = azkBuffer->getDeviceBuffer().getDataBox();
@@ -502,8 +514,9 @@ namespace picongpu
                     rho0 = rho1;
                     if(std::sqrt(totalSum2) < epsilon)
                     {
+                        converged = true;
                         std::cout << "Converged after " << i << " iterations with norm=" << normRho
-                                  << ", total sum2=" << totalSum2 << std::endl;
+                                  << ", total sum2=" << std::sqrt(totalSum2) << std::endl;
                         break;
                     }
                     // pk = rk + beta * (pk - omega * ampk)
@@ -522,6 +535,11 @@ namespace picongpu
                     }
                 } // for loop
 
+                if(!converged){
+                    std::cout << "BICGstab not converged after " << maxIterations << 
+                    " iterations with error=" << std::sqrt(totalSum2) << std::endl;
+                }
+
                 {
                     // normalize v back
                     auto vMapper = makeAreaMapper<GUARD>(m_mappingDesc);
@@ -535,6 +553,25 @@ namespace picongpu
                             vMapper);
                     fieldV->fieldVBuffer->communication();
                 }
+
+                // compute synthetic error for test
+                auto computeSyntheticError = fields::poissonSolver::ComputeSyntheticError{};
+                computeSyntheticError(*fieldV.get(), *rkBuffer.get(), m_mappingDesc);
+                
+                // compute synthetic error for test
+                /* totalSum2 = rk * rk */
+                {
+                    auto rkBox = rkBuffer->getDeviceBuffer().getDataBox();
+                    auto rkBoxBorderGuard = rkBox.shift(numGuardCells);
+
+                    TransformDataBox fieldTransform(
+                        [rkBoxBorderGuard] DEVICEONLY(DataSpace<simDim> const& idx) -> float_64
+                        { return rkBoxBorderGuard[idx] * rkBoxBorderGuard[idx]; });
+
+                    totalSum2 = reduceGlobal(coreBorderSize, fieldTransform);
+                }
+                std::cout << "Error from synthetic test=" << std::sqrt(totalSum2) << std::endl;
+
             }
         } // namespace stage
     } // namespace simulation

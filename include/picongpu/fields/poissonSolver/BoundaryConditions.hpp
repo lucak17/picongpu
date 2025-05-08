@@ -29,7 +29,7 @@
 
 namespace picongpu::fields::poissonSolver
 {
-    struct SolutionFunction
+    struct BoundaryConditionsFunction
     {
         HDINLINE auto operator()(math::Vector<double, simDim> const& totalCellCoordinate) const
         {
@@ -83,7 +83,7 @@ namespace picongpu::fields::poissonSolver
     {
         // return residual
         // return number of iterations
-        void operator()(FieldV& fieldV, MappingDesc cellDescription) const
+        void operator()(FieldV& fieldV, MappingDesc mappingDesc) const
         {
             SubGrid<simDim> const& subGrid = Environment<simDim>::get().SubGrid();
             auto globalDomain = subGrid.getGlobalDomain();
@@ -97,12 +97,12 @@ namespace picongpu::fields::poissonSolver
                 /* only call for planes: left right top bottom back front*/
                 if(FRONT % i == 0 && !(Environment<simDim>::get().GridController().getCommunicationMask().isSet(i)))
                 {
-                    ExchangeMapping<GUARD, MappingDesc> mapper(cellDescription, i);
+                    ExchangeMapping<GUARD, MappingDesc> mapper(mappingDesc, i);
 
                     PMACC_LOCKSTEP_KERNEL(ApplyDirichletBCsFromFunctionKernel{})
                         .config(mapper.getGridDim(), SuperCellSize{})(
                             fieldV.fieldVBuffer->getDeviceBuffer().getDataBox(),
-                            SolutionFunction{},
+                            BoundaryConditionsFunction{},
                             cellOffsetToTotalOrigin,
                             mapper);
                 }
