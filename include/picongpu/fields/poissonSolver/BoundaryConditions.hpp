@@ -23,6 +23,8 @@
 #include "picongpu/fields/FieldTmpOperations.hpp"
 #include "picongpu/fields/poissonSolver/FieldV.hpp"
 
+#include "picongpu/fields/poissonSolver/SyntheticTest.hpp"
+
 #include <pmacc/lockstep/lockstep.hpp>
 #include <pmacc/mappings/kernel/ExchangeMapping.hpp>
 #include <pmacc/memory/dataTypes/Mask.hpp>
@@ -102,7 +104,7 @@ namespace picongpu::fields::poissonSolver
                     PMACC_LOCKSTEP_KERNEL(ApplyDirichletBCsFromFunctionKernel{})
                         .config(mapper.getGridDim(), SuperCellSize{})(
                             fieldV.fieldVBuffer->getDeviceBuffer().getDataBox(),
-                            BoundaryConditionsFunction{},
+                            SolutionFunction{},
                             cellOffsetToTotalOrigin,
                             mapper);
                 }

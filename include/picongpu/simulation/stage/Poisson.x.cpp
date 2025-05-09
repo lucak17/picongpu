@@ -252,12 +252,13 @@ namespace picongpu
                     computeChargeDensity;
 
                 fieldRho.getGridBuffer().getDeviceBuffer().setValue(FieldTmp::ValueType(0.0));
+#if 0                
                 computeChargeDensity(fieldRho, currentStep);
 
                 /* add results of all species that are still in GUARD to next GPUs BORDER */
                 EventTask fieldTmpEvent = fieldRho.asyncCommunication(eventSystem::getTransactionEvent());
                 eventSystem::setTransactionEvent(fieldTmpEvent);
-
+#endif
                 // set synthetic rhs for test
                 auto setSyntheticRHS = fields::poissonSolver::SetSyntheticRHS{};
                 setSyntheticRHS(fieldRho, m_mappingDesc);
@@ -284,10 +285,9 @@ namespace picongpu
                 setSyntheticRHS(fieldRho, m_mappingDesc);
 #if 0                
                 computeChargeDensity(fieldRho, currentStep);
-#endif
                 /* add results of all species that are still in GUARD to next GPUs BORDER */
                 eventSystem::setTransactionEvent(fieldRho.asyncCommunication(eventSystem::getTransactionEvent()));
-                
+#endif
                 // normalize rho
                 auto coreBorderMapper = makeAreaMapper<CORE + BORDER>(m_mappingDesc);
                 {
@@ -349,6 +349,7 @@ namespace picongpu
 
                     rho0 = reduceGlobal(coreBorderSize, fieldTransform);
                 }
+                std::cout<<"Initial error=" << std::sqrt(rho0) << std::endl;
 
                 float_64 rho1 = rho0;
 
@@ -512,6 +513,12 @@ namespace picongpu
                     rho1 = totalSum1;
                     float_64 beta = rho1 / rho0 * alpha / omega;
                     rho0 = rho1;
+ #if 0
+                    if(i % 10 == 0)
+                    {
+                        std::cout << "Iteration " << i << " error=" << std::sqrt(totalSum2) << std::endl;
+                    }
+#endif 
                     if(std::sqrt(totalSum2) < epsilon)
                     {
                         converged = true;
@@ -540,19 +547,61 @@ namespace picongpu
                     " iterations with error=" << std::sqrt(totalSum2) << std::endl;
                 }
 
+                // normalize v and rho back
                 {
-                    // normalize v back
-                    auto vMapper = makeAreaMapper<GUARD>(m_mappingDesc);
                     auto vField = fieldV->fieldVBuffer->getDeviceBuffer().getDataBox();
                     PMACC_LOCKSTEP_KERNEL(ForEachKernel{})
-                        .config(vMapper.getGridDim(), SuperCellSize{})(
+                        .config(coreBorderMapper.getGridDim(), SuperCellSize{})(
                             vField,
                             DeviceLambda{
                                 [vField, normRho] DEVICEONLY(DataSpace<simDim> idx) -> float_64
                                 { return vField[idx] * normRho; }},
-                            vMapper);
+                                coreBorderMapper);
                     fieldV->fieldVBuffer->communication();
+
+                    auto rhoBox = fieldRho.getDeviceDataBox();
+                    PMACC_LOCKSTEP_KERNEL(ForEachKernel{})
+                        .config(coreBorderMapper.getGridDim(), SuperCellSize{})(
+                            rhoBox,
+                            DeviceLambda{
+                                [rhoBox, normRho] DEVICEONLY(DataSpace<simDim> idx) -> float_64
+                                { return rhoBox[idx].x() * normRho; }},
+                                coreBorderMapper);
                 }
+                eventSystem::getTransactionEvent().waitForFinished();
+                
+                // compute error Av - rho 
+                {
+                    auto vField = fieldV->fieldVBuffer->getDeviceBuffer().getDataBox();
+                    auto r0Box = r0Buffer->getDeviceBuffer().getDataBox();
+                    PMACC_LOCKSTEP_KERNEL(fields::poissonSolver::Stencil{})
+                        .config(
+                            coreBorderMapper.getGridDim(),
+                            SuperCellSize{})(coreBorderMapper, fields::poissonSolver::StencilFunc{}, r0Box, vField);
+
+
+                    auto rhoBox = fieldRho.getDeviceDataBox();
+                    PMACC_LOCKSTEP_KERNEL(ForEachKernel{})
+                        .config(coreBorderMapper.getGridDim(), SuperCellSize{})(
+                            r0Box,
+                            DeviceLambda{
+                                [r0Box, rhoBox] DEVICEONLY(DataSpace<simDim> idx) -> float_64
+                                { return rhoBox[idx].x() - r0Box[idx]; }},
+                            coreBorderMapper);
+                }
+
+                /* rho reduction */
+                {
+                    auto r0Box = r0Buffer->getDeviceBuffer().getDataBox();
+                    auto r0BoxBorderGuard = r0Box.shift(numGuardCells);
+
+                    TransformDataBox fieldTransform(
+                        [r0BoxBorderGuard] DEVICEONLY(DataSpace<simDim> const& idx) -> float_64
+                        { return r0BoxBorderGuard[idx] * r0BoxBorderGuard[idx]; });
+
+                    rho0 = reduceGlobal(coreBorderSize, fieldTransform);
+                }
+                std::cout<<"Final error(Av-rho)=" << std::sqrt(rho0) << std::endl;
 
                 // compute synthetic error for test
                 auto computeSyntheticError = fields::poissonSolver::ComputeSyntheticError{};

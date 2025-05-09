@@ -333,9 +333,9 @@ namespace picongpu
             atomicPhysics = std::make_shared<simulation::stage::AtomicPhysics>(*cellDescription);
 
             synchrotronRadiation = std::make_shared<simulation::stage::SynchrotronRadiation>(*cellDescription);
-
+            
             poissonSolver = std::make_shared<simulation::stage::Poisson>(*cellDescription);
-
+            
             initFields(dc);
 
             myFieldSolver = std::make_shared<fields::Solver>(*cellDescription);
@@ -492,6 +492,7 @@ namespace picongpu
                 {
                     initialiserController->init();
                     simulation::stage::ParticleInit{}(step);
+                    std::cout<< "Before call poisson" <<std::endl;
                     (*poissonSolver)(step);
                     (*atomicPhysics).fixAtomicStateInit(*cellDescription);
                     // Check Debye resolution

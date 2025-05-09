@@ -31,6 +31,7 @@
  {
      struct SolutionFunction
      {
+#if 0
          HDINLINE auto operator()(math::Vector<double, simDim> const& totalCellCoordinate) const
          {
              if constexpr(simDim == 3u)
@@ -45,11 +46,26 @@
                         + totalCellCoordinate.x() * totalCellCoordinate.productOfComponents() + 10.0;
              }
          }
+#endif 
+        HDINLINE auto operator()(math::Vector<double, simDim> const& totalCellCoordinate) const
+        {
+            if constexpr(simDim == 3u)
+            {
+                return 5.0 * math::sin(totalCellCoordinate.x()) + 2.0 * math::cos(totalCellCoordinate.y())
+                    + 3.0 * math::sin(totalCellCoordinate.z()) + totalCellCoordinate.x() +  5.0 ;
+            }
+            else if constexpr(simDim == 2u)
+            {
+                return 5.0 * math::sin(totalCellCoordinate.x()) + 2.0 * math::cos(totalCellCoordinate.y())
+                + totalCellCoordinate.x() +  5.0;
+            }
+        }
      };
 
      // RHSFunction = -Laplacian(SolutionFunction)
      struct RHSFunction
      {
+#if 0
          HDINLINE auto operator()(math::Vector<double, simDim> const& totalCellCoordinate) const
          {
              if constexpr(simDim == 3u)
@@ -62,6 +78,19 @@
                  return math::sin(totalCellCoordinate.x()) + math::cos(totalCellCoordinate.y()) - 2 * totalCellCoordinate.y();
              }
          }
+#endif
+        HDINLINE auto operator()(math::Vector<double, simDim> const& totalCellCoordinate) const
+        {
+            if constexpr(simDim == 3u)
+            {
+                return 5.0 * math::sin(totalCellCoordinate.x()) + 2.0 * math::cos(totalCellCoordinate.y())
+                    + 3.0 * math::sin(totalCellCoordinate.z());
+            }
+            else if constexpr(simDim == 2u)
+            {
+                return 5.0 * math::sin(totalCellCoordinate.x()) + 2.0 * math::cos(totalCellCoordinate.y());
+            }
+        }
      };
  
      struct SetSyntheticRHSKernel
@@ -100,8 +129,8 @@
      {
          DINLINE auto operator()(
              auto const& worker,
-             auto fieldVBox,
              auto rBox,
+             auto fieldVBox,
              auto const solutionFunction,
              DataSpace<simDim> cellOffsetToTotalOrigin,
              auto const mapper) const -> void
@@ -124,8 +153,9 @@
                      auto totalDistance = precisionCast<float_64>(totalCellIdx)
                                           * precisionCast<float_64>(sim.pic.getCellSize().shrink<simDim>());
  
-                    rBox(superCellIdx * SuperCellSize::toRT() + cellIdx) = fieldVBox(superCellIdx * SuperCellSize::toRT() + cellIdx) -
-                                                                            solutionFunction(totalDistance);
+                    rBox(superCellIdx * SuperCellSize::toRT() + cellIdx) = solutionFunction(totalDistance) - 
+                                                                            fieldVBox(superCellIdx * SuperCellSize::toRT() + cellIdx);
+                                                                            
                  });
          }
      };
@@ -169,8 +199,8 @@
  
             PMACC_LOCKSTEP_KERNEL(ComputeSyntheticErrorKernel{})
                 .config(coreBorderMapper.getGridDim(), SuperCellSize{})(
-                    fieldVBox,
                     rBox,
+                    fieldVBox,
                     SolutionFunction{},
                     cellOffsetToTotalOrigin,
                     coreBorderMapper);
