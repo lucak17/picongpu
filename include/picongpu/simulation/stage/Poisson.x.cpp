@@ -549,6 +549,7 @@ namespace picongpu
                     " iterations with error=" << std::sqrt(totalSum2) << std::endl;
                 }
 
+
                 fieldV->fieldVBuffer->communication();
                 // compute error Av - rho 
                 {
@@ -583,17 +584,17 @@ namespace picongpu
                 }
                 std::cout<<"Final error(rho - Av)=" << std::sqrt(rho0) << std::endl;
 
-
                 // normalize v and rho back
+                auto coreBorderGuardsMapper = makeAreaMapper<CORE + BORDER + GUARD>(m_mappingDesc);
                 {
                     auto vField = fieldV->fieldVBuffer->getDeviceBuffer().getDataBox();
                     PMACC_LOCKSTEP_KERNEL(ForEachKernel{})
-                        .config(coreBorderMapper.getGridDim(), SuperCellSize{})(
+                        .config(coreBorderGuardsMapper.getGridDim(), SuperCellSize{})(
                             vField,
                             DeviceLambda{
                                 [vField, normRho] DEVICEONLY(DataSpace<simDim> idx) -> float_64
                                 { return vField[idx] * normRho; }},
-                                coreBorderMapper);
+                                coreBorderGuardsMapper);
                     fieldV->fieldVBuffer->communication();
 
                     auto rhoBox = fieldRho.getDeviceDataBox();
@@ -606,6 +607,7 @@ namespace picongpu
                                 coreBorderMapper);
                 }
                 eventSystem::getTransactionEvent().waitForFinished();
+                
                 
                 // compute synthetic error for test
                 auto computeSyntheticError = fields::poissonSolver::ComputeSyntheticError{};
@@ -624,7 +626,6 @@ namespace picongpu
                     totalSum2 = reduceGlobal(coreBorderSize, fieldTransform);
                 }
                 std::cout << "Error from synthetic test=" << std::sqrt(totalSum2) << std::endl;
-
             }
         } // namespace stage
     } // namespace simulation
