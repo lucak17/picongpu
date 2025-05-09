@@ -131,6 +131,7 @@ namespace picongpu
 
                 auto const commTag0 = pmacc::traits::getUniqueId<uint32_t>();
                 auto const commTag1 = pmacc::traits::getUniqueId<uint32_t>();
+                auto const commTagFieldV = pmacc::traits::getUniqueId<uint32_t>();
                 /*go over all directions*/
                 for(uint32_t i = 1; i < NumberOfExchanges<simDim>::value; ++i)
                 {
@@ -146,6 +147,7 @@ namespace picongpu
                             guardingCells[d] = (relativeMask[d] == 0 ? 0 : 1);
                         mpkBuffer->addExchange(GUARD, i, guardingCells, commTag0);
                         zkBuffer->addExchange(GUARD, i, guardingCells, commTag1);
+                        fieldV->fieldVBuffer->addExchange(GUARD, i, guardingCells, commTagFieldV);
                     }
                 }
                 DataConnector& dc = Environment<>::get().DataConnector();
@@ -547,29 +549,7 @@ namespace picongpu
                     " iterations with error=" << std::sqrt(totalSum2) << std::endl;
                 }
 
-                // normalize v and rho back
-                {
-                    auto vField = fieldV->fieldVBuffer->getDeviceBuffer().getDataBox();
-                    PMACC_LOCKSTEP_KERNEL(ForEachKernel{})
-                        .config(coreBorderMapper.getGridDim(), SuperCellSize{})(
-                            vField,
-                            DeviceLambda{
-                                [vField, normRho] DEVICEONLY(DataSpace<simDim> idx) -> float_64
-                                { return vField[idx] * normRho; }},
-                                coreBorderMapper);
-                    fieldV->fieldVBuffer->communication();
-
-                    auto rhoBox = fieldRho.getDeviceDataBox();
-                    PMACC_LOCKSTEP_KERNEL(ForEachKernel{})
-                        .config(coreBorderMapper.getGridDim(), SuperCellSize{})(
-                            rhoBox,
-                            DeviceLambda{
-                                [rhoBox, normRho] DEVICEONLY(DataSpace<simDim> idx) -> float_64
-                                { return rhoBox[idx].x() * normRho; }},
-                                coreBorderMapper);
-                }
-                eventSystem::getTransactionEvent().waitForFinished();
-                
+                fieldV->fieldVBuffer->communication();
                 // compute error Av - rho 
                 {
                     auto vField = fieldV->fieldVBuffer->getDeviceBuffer().getDataBox();
@@ -601,8 +581,32 @@ namespace picongpu
 
                     rho0 = reduceGlobal(coreBorderSize, fieldTransform);
                 }
-                std::cout<<"Final error(Av-rho)=" << std::sqrt(rho0) << std::endl;
+                std::cout<<"Final error(rho - Av)=" << std::sqrt(rho0) << std::endl;
 
+
+                // normalize v and rho back
+                {
+                    auto vField = fieldV->fieldVBuffer->getDeviceBuffer().getDataBox();
+                    PMACC_LOCKSTEP_KERNEL(ForEachKernel{})
+                        .config(coreBorderMapper.getGridDim(), SuperCellSize{})(
+                            vField,
+                            DeviceLambda{
+                                [vField, normRho] DEVICEONLY(DataSpace<simDim> idx) -> float_64
+                                { return vField[idx] * normRho; }},
+                                coreBorderMapper);
+                    fieldV->fieldVBuffer->communication();
+
+                    auto rhoBox = fieldRho.getDeviceDataBox();
+                    PMACC_LOCKSTEP_KERNEL(ForEachKernel{})
+                        .config(coreBorderMapper.getGridDim(), SuperCellSize{})(
+                            rhoBox,
+                            DeviceLambda{
+                                [rhoBox, normRho] DEVICEONLY(DataSpace<simDim> idx) -> float_64
+                                { return rhoBox[idx].x() * normRho; }},
+                                coreBorderMapper);
+                }
+                eventSystem::getTransactionEvent().waitForFinished();
+                
                 // compute synthetic error for test
                 auto computeSyntheticError = fields::poissonSolver::ComputeSyntheticError{};
                 computeSyntheticError(*fieldV.get(), *rkBuffer.get(), m_mappingDesc);

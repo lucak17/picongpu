@@ -102,13 +102,17 @@
              DataSpace<simDim> cellOffsetToTotalOrigin,
              auto const mapper) const -> void
          {
-             DataSpace<simDim> const superCellIdx(mapper.getSuperCellIndex(worker.blockDomIdxND()));
-             DataSpace<simDim> superCellTotalCellOffset
-                 = cellOffsetToTotalOrigin + superCellIdx * SuperCellSize::toRT();
- 
-             constexpr uint32_t cellsPerSuperCell = pmacc::math::CT::volume<SuperCellSize>::type::value;
- 
-             auto forEachCellInSupercell = lockstep::makeForEach<cellsPerSuperCell>(worker);
+             // including guards
+            DataSpace<simDim> const superCellIdx(mapper.getSuperCellIndex(worker.blockDomIdxND()));
+            DataSpace<simDim> numGuardCells = mapper.getGuardingSuperCells() * SuperCellSize::toRT();
+
+            // offset without guards
+            DataSpace<simDim> superCellTotalCellOffset
+                = cellOffsetToTotalOrigin + superCellIdx * SuperCellSize::toRT() - numGuardCells;
+
+            constexpr uint32_t cellsPerSuperCell = pmacc::math::CT::volume<SuperCellSize>::type::value;
+
+            auto forEachCellInSupercell = lockstep::makeForEach<cellsPerSuperCell>(worker);
  
              forEachCellInSupercell(
                  [&](int32_t const linearCellIdx)
@@ -135,13 +139,17 @@
              DataSpace<simDim> cellOffsetToTotalOrigin,
              auto const mapper) const -> void
          {
-             DataSpace<simDim> const superCellIdx(mapper.getSuperCellIndex(worker.blockDomIdxND()));
-             DataSpace<simDim> superCellTotalCellOffset
-                 = cellOffsetToTotalOrigin + superCellIdx * SuperCellSize::toRT();
- 
-             constexpr uint32_t cellsPerSuperCell = pmacc::math::CT::volume<SuperCellSize>::type::value;
- 
-             auto forEachCellInSupercell = lockstep::makeForEach<cellsPerSuperCell>(worker);
+             // including guards
+            DataSpace<simDim> const superCellIdx(mapper.getSuperCellIndex(worker.blockDomIdxND()));
+            DataSpace<simDim> numGuardCells = mapper.getGuardingSuperCells() * SuperCellSize::toRT();
+
+            // offset without guards
+            DataSpace<simDim> superCellTotalCellOffset
+                = cellOffsetToTotalOrigin + superCellIdx * SuperCellSize::toRT() - numGuardCells;
+
+            constexpr uint32_t cellsPerSuperCell = pmacc::math::CT::volume<SuperCellSize>::type::value;
+
+            auto forEachCellInSupercell = lockstep::makeForEach<cellsPerSuperCell>(worker);
  
              forEachCellInSupercell(
                  [&](int32_t const linearCellIdx)
